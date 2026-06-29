@@ -8,45 +8,16 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// FLUID PROPERTIES
-// Source: SedFoam phaseb (fluid phase)
 transportModel  Newtonian;
 
 nu              [0 2 -1 0 0 0 0]  1e-6;     // kinematic viscosity [m2/s]
-                                              // fresh water at 20C -- from SedFoam phaseb.nu
 
-rho             [1 -3 0 0 0 0 0]  1000;      // fluid density [kg/m3]
-                                              // fresh water -- from SedFoam phaseb.rho
-
-// SEDIMENT PROPERTIES
-// Source: SedFoam phasea (sediment phase)
-// These feed into: Shields number, settling velocity, bedload formula,
-// Exner equation, and suspended load Schmidt number.
-
+// sedExnerFoam keyword names
+rhoW            [1 -3 0 0 0 0 0]  1000;     // water density [kg/m3]
+rhoS            [1 -3 0 0 0 0 0]  2650;     // sediment density [kg/m3]
 d50             [0 1 0 0 0 0 0]   3.6e-4;   // median grain diameter [m]
-                                              // FROM SedFoam phasea.d = 0.36e-3 m
-
-rhoSed          [1 -3 0 0 0 0 0]  2650;      // sediment density [kg/m3]
-                                              // FROM SedFoam phasea.rho
-
-porosity        [0 0 0 0 0 0 0]   0.365;     // bed porosity = 1 - alphaMax
-                                              // SedFoam ppProperties: alphaMax = 0.635
-                                              // (NOT 0.6 -- previous comment was wrong)
-                                              // porosity = 1 - 0.635 = 0.365  <-- correct
-
-angleOfRepose   [0 0 0 0 0 0 0]   32;        // degrees -- used by avalanche model
-                                              // standard value for quartz sand
-
-// TURBULENT SCHMIDT NUMBER
-// Controls how efficiently turbulence mixes suspended sediment vertically.
-// Sc_t = 1.0 is the standard value; range 0.5-1.5 is acceptable.
-// SedFoam does not have an explicit Sc_t (it uses full two-fluid turbulence),
-// so 1.0 is the most neutral choice for the comparison.
+porosity        [0 0 0 0 0 0 0]   0.365;    // 1 - alphaMax(0.635)
+angleOfRepose   [0 0 0 0 0 0 0]   32;
 SchmidtNumber   [0 0 0 0 0 0 0]   1.0;
 
 // ************************************************************************* //
-
-// sedExnerFoam keyword aliases
-// The solver reads 'rhoS' and 'rhoW' specifically
-rhoS            [1 -3 0 0 0 0 0]  2650;     // = rhoSed (sediment density)
-rhoW            [1 -3 0 0 0 0 0]  1000;     // = rho    (water density)
