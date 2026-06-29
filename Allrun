@@ -22,8 +22,8 @@ sed -i -e 's/\btype\s*empty;/type emptyy;/g' constant/polyMesh/boundary
 
 # ------------------------------------------------------------
 # 3. Run snappyHexMesh in PARALLEL on 8 cores
-#    decomposePar is run on the background blockMesh first,
-#    then snappy overwrites each processor*/constant/polyMesh
+#    decomposePar on background blockMesh first, then snappy
+#    overwrites each processor*/constant/polyMesh in parallel.
 # ------------------------------------------------------------
 decomposePar 2>&1 | tee log.decomposePar_snappy
 mpirun -np 8 snappyHexMesh -overwrite -parallel 2>&1 | tee log.snappyHexMesh
@@ -54,14 +54,27 @@ fi
 cp -r 0_org 0
 
 # ------------------------------------------------------------
-# 7. Decompose final mesh for parallel solver run
+# 7. Build finite-area mesh on the seabed patch
+#    MUST run on the serial (reconstructed) constant/polyMesh.
+#    sedExnerFoam reads constant/faMesh/ to solve the Exner
+#    bed-elevation equation on the 2D finite-area surface.
+#    Run BEFORE decomposePar so faMesh is in constant/ and
+#    visible to all processors via the shared constant/ dir.
+# ------------------------------------------------------------
+makeFaMesh 2>&1 | tee log.makeFaMesh
+if grep -q 'FOAM exiting' log.makeFaMesh; then
+    echo "ERROR: makeFaMesh failed. Check seabed patch name in constant/polyMesh/boundary."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# 8. Decompose final mesh for parallel solver run
 # ------------------------------------------------------------
 decomposePar 2>&1 | tee log.decomposePar_solver
 
 # ------------------------------------------------------------
-# 8. Run sedExnerFoam in parallel on 8 cores
+# 9. Run sedExnerFoam in parallel on 8 cores
 #    sedExnerFoam: morphodynamic Exner scour solver
-#    (replaces sedFoam_rbgh which is the two-phase solver)
 # ------------------------------------------------------------
 mpirun -np 8 sedExnerFoam -parallel 2>&1 | tee log.sedExnerFoam
 
