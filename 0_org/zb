@@ -2,56 +2,85 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       areaScalarField;     // NOT volScalarField — this is a faMesh field
+    class       areaScalarField;
     location    "0";
     object      zb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-// Bed elevation [m] measured from a fixed datum (y = 0 = initial flat bed).
+//
+// Bed elevation [m] measured from the fixed coordinate datum y = 0.
 // Lives on the 2D faMesh projected onto the "seabed" patch.
-// Positive zb = bed above datum, negative = scour below datum.
-// Initial flat bed: zb = 0 everywhere.
+//
+// DATUM NOTE (critical for sedExnerFoam ALE):
+//   The seabed patch sits at y = -0.025 m in the preserved SedFoam
+//   coordinate system (bed at -0.025, free surface at +0.205, total
+//   water depth H = 0.230 m).
+//
+//   zb must be initialised to -0.025, NOT to 0.
+//   The Exner solver computes mesh displacement as:
+//       delta_y = zb_new - zb_old
+//   If zb_old = 0 but the mesh boundary is at y = -0.025, the solver
+//   immediately attempts to move all bed points UP by 0.025 m on the
+//   first morphological timestep. This compresses the 8 boundary layers
+//   toward the cylinder, creates negative cell volumes, and crashes
+//   the run within 1-2 timesteps.
+//
+// SIGN CONVENTION:
+//   zb = -0.025  initial flat bed (no scour, no deposition)
+//   zb < -0.025  scour (bed eroded below initial level)
+//   zb > -0.025  deposition (bed accreted above initial level)
+//
+// COMPARISON NOTE:
+//   In SedFoam the equivalent quantity is the iso-surface alpha.a = 0.3
+//   which marks the bed interface. For direct comparison, extract
+//   the y-coordinate of that iso-surface and subtract 0.025 to convert
+//   to the same datum as zb here.
+//   i.e.:  scour_depth = zb + 0.025  [positive = scour below initial bed]
+//
+// faMesh edge patches (defined in constant/faMesh/faBoundary after
+// running makeFaMesh -- verify names match before running):
 
-dimensions      [0 1 0 0 0 0 0];    // metres
+dimensions      [0 1 0 0 0 0 0];
 
-internalField   uniform 0;          // flat bed at t=0
+// FIXED from uniform 0 to uniform -0.025
+// Reason: bed patch y-coordinate = -0.025 m in preserved SedFoam coords
+internalField   uniform -0.025;
 
 boundaryField
 {
-    // NOTE: these are faMesh EDGE patches, not 3D volume patches.
-    // Their names are defined in constant/faMesh/faBoundary
-    // after you run makeFaMesh. The names below are standard
-    // sedExnerFoam conventions — verify against your faBoundary file.
-
     inlet
     {
-        // Bed elevation at inlet is fixed — the upstream bed does not
-        // change during the simulation (scour is local to the cylinder).
+        // Upstream bed is fixed -- no scour or deposition at inlet.
+        // Matches the SedFoam setup where the upstream bed is undisturbed.
         type            fixedValue;
-        value           uniform 0;
+        value           uniform -0.025;   // FIXED from 0
     }
 
     outlet
     {
-        // Allow bed elevation to evolve freely at outlet —
-        // deposition may occur downstream of the cylinder.
+        // Bed elevation evolves freely at outlet.
+        // Downstream deposition is expected in the cylinder wake -- do
+        // not pin this or the Exner solver will pile up sediment
+        // unphysically just upstream of the outlet boundary.
         type            zeroGradient;
     }
 
     cylinder
     {
-        // CRITICAL: bed cannot move at the cylinder contact line.
-        // fixedValue 0 pins the Exner equation at this edge.
-        // Without this, the solver produces unbounded scour at the
-        // cylinder base within the first morphological timestep.
+        // CRITICAL: bed cannot deform at the cylinder contact line.
+        // The cylinder base intersects the bed at y = -0.025 m.
+        // fixedValue pins the Exner equation at this faMesh edge,
+        // preventing unbounded scour deepening at the cylinder base
+        // within the first few morphological timesteps.
+        // Value = -0.025 matches the initial bed level.
         type            fixedValue;
-        value           uniform 0;
+        value           uniform -0.025;   // FIXED from 0
     }
 
-    // If your faMesh has a "seabed_top" or "top" edge (where seabed
-    // patch meets the top boundary) — add zeroGradient there too.
-    // Check constant/faMesh/faBoundary after running makeFaMesh.
+    // If makeFaMesh generates additional edge patches (e.g. "top" where
+    // the seabed patch meets the domain top -- unlikely for a floor patch
+    // but possible depending on mesh topology) add them here as
+    // zeroGradient. Check constant/faMesh/faBoundary after makeFaMesh.
 }
 
 // ************************************************************************* //
