@@ -52,7 +52,7 @@ boundaryField
     top
     {
         // RENAMED from "surface"
-        type            calculated;
+        type            symmetryPlane;
         value           uniform 0;
     }
 

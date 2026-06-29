@@ -25,8 +25,8 @@ boundaryField
         // Direction is always wall-normal (vertical for a flat bed = y-direction).
         // uniformNormalFixedValue applies the scalar Exner displacement
         // as a vector in the patch-normal direction automatically.
-        type            uniformNormalFixedValue;
-        uniformValue    uniform 0;   // overwritten by solver at each timestep
+        type            fixedValue;
+        value           uniform (0 0 0);   // overwritten by solver at each timestep
     }
 
     cylinder
@@ -58,7 +58,7 @@ boundaryField
     top
     {
         // Free surface is rigid lid — no vertical displacement.
-        type            fixedValue;
+        type            symmetryPlane;
         value           uniform (0 0 0);
     }
 
