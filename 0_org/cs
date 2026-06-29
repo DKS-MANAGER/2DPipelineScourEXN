@@ -1,0 +1,74 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      cs;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Suspended sediment concentration [kg/m3].
+// Transported as passive scalar by fluid velocity U.
+// Source/sink terms (erosion, deposition, settling) are added by sedExnerFoam
+// internally — you do NOT add them here.
+
+dimensions      [1 -3 0 0 0 0 0];    // kg/m3
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        // Equilibrium suspended load at inlet.
+        // Set to 0 initially — replace with a profile via setFields
+        // once you know the bed shear stress at inlet.
+        // For the comparison run, a uniform low value (e.g. 1e-4 kg/m3)
+        // is acceptable for d50=0.2mm sand under the log-law inlet.
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    outlet
+    {
+        // Allow suspended load to leave freely — inletOutlet prevents
+        // backflow from re-injecting sediment if flow reverses near outlet.
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+
+    seabed
+    {
+        // This is where erosion and deposition happen.
+        // The BC type is NOT fixedValue or zeroGradient —
+        // sedExnerFoam applies its own erosion/deposition flux BC here
+        // at runtime. You register it as a generic mixed BC placeholder.
+        type            zeroGradient;
+        // sedExnerFoam will OVERRIDE this at runtime with the
+        // van Rijn erosion flux. Leaving it as zeroGradient is
+        // the correct initialisation state.
+    }
+
+    cylinder
+    {
+        // No sediment flux through the cylinder wall.
+        type            zeroGradient;
+    }
+
+    top
+    {
+        // No sediment at the free surface (rigid lid).
+        // zeroGradient is physically correct — sediment does not
+        // exit through the top boundary.
+        type            zeroGradient;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,107 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// CHANGED from sedFoam — this is what Allrun reads to launch the solver
+application     sedExnerFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+// PRESERVED: same 45-second physical end time as SedFoam.
+// This is non-negotiable for a direct comparison — both simulations
+// must cover identical physical time windows.
+endTime         45;
+
+// Initial timestep — same as SedFoam for the ramp-up phase (t < 4s).
+// The adjustable timestepper will increase this automatically once
+// the flow is established and the CFL allows it.
+deltaT          1e-4;
+
+writeControl    adjustableRunTime;
+
+// PRESERVED: same write interval as SedFoam for identical output resolution.
+writeInterval   0.5;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression false;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable on;
+
+adjustTimeStep  yes;
+
+// Fluid Courant number limit.
+// PRESERVED from SedFoam (0.1) during ramp-up.
+// After t > 4s you can increase to 0.4 by editing here — the PIMPLE
+// loop handles higher Co without instability.
+maxCo           0.1;
+
+// REMOVED: maxAlphaCo — SedFoam-specific, not valid in sedExnerFoam.
+// sedExnerFoam has no alpha field to limit.
+
+// INCREASED from SedFoam's 1.5e-4 to 5e-3.
+// Reasoning: SedFoam needs tiny dt for explicit two-phase drag coupling.
+// sedExnerFoam's PIMPLE is implicit — the bottleneck is the mesh motion
+// Courant number (Co_mesh = mesh_velocity * dt / dx), not the fluid CFL.
+// At peak scour rate ~1mm/s and dx~1mm near bed: Co_mesh = 1e-3*5e-3/1e-3 = 5e-3 << 1.
+// This gives a ~33x speedup over SedFoam for the same physical time.
+maxDeltaT       5e-3;
+
+// ── FUNCTIONS ───────────────────────────────────────────────────────────────
+functions
+{
+    // Monitor scour depth at cylinder base for real-time comparison.
+    // Samples zb at the point directly below the cylinder centre.
+    // Adjust xyz coordinates to match your cylinder centre location
+    // after blockMesh — check from blockMeshDict.
+    scourDepthProbe
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;         // every 10 steps — lightweight
+        probeLocations
+        (
+            (2.0 0.0 0.075)         // directly below cylinder centre at bed
+        );
+        fields          (zb cs);    // track both bed elevation and suspended load
+    }
+
+    // Residual monitoring — essential for diagnosing PIMPLE convergence
+    // on the deforming mesh.
+    residuals
+    {
+        type            solverInfo;
+        libs            (utilityFunctionObjects);
+        fields          (U p k omega cs);
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}
+
+// ************************************************************************* //

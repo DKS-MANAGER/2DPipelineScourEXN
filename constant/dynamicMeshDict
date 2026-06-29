@@ -1,0 +1,30 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Dynamic mesh type: uses a motion solver to deform the mesh.
+// The alternative (dynamicRefineFvMesh) is for adaptive refinement — not what we want.
+dynamicFvMesh   dynamicMotionSolverFvMesh;
+
+// The motion solver reads pointDisplacement BCs and solves
+// the Laplace equation for mesh point displacement across the domain.
+motionSolver    displacementLaplacian;
+
+displacementLaplacianCoeffs
+{
+    // inverseDistance diffusivity with respect to the cylinder patch.
+    // Effect: diffusivity γ = 1/d(x, cylinder_surface)
+    //   → Near cylinder:  γ → ∞  → cells are rigid (resist deformation)
+    //   → Near seabed:    γ → small → cells deform freely following Exner
+    // This is what prevents the O-grid around the cylinder from collapsing
+    // as the scour pit develops beneath the pipeline.
+    diffusivity     inverseDistance (cylinder);
+}
+
+// ************************************************************************* //

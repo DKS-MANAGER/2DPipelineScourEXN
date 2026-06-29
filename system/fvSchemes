@@ -1,0 +1,137 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    // PRESERVED from SedFoam: first-order implicit Euler.
+    // Sufficient for morphodynamic timescales. Switch to backward
+    // (second-order) only after confirming stability.
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+
+    // CHANGED: removed phase suffixes (.b). cellLimited preserved —
+    // it prevents gradient overshoots near the cylinder and bed.
+    grad(k)         cellLimited Gauss linear 1;
+    grad(omega)     cellLimited Gauss linear 1;
+    grad(U)         cellLimited Gauss linear 1;
+}
+
+divSchemes
+{
+    default         none;
+
+    // ── MOMENTUM ─────────────────────────────────────────────────────
+    // CHANGED: div(phi.b,U.b) → div(phi,U). linearUpwind preserved.
+    // linearUpwind is second-order accurate and bounded — correct for
+    // the recirculation zones in the cylinder wake.
+    div(phi,U)          Gauss linearUpwind grad(U);
+
+    // Symmetric stress tensor divergence — needed by kOmegaSST
+    div((nuEff*dev(T(grad(U)))))  Gauss linear;
+
+    // ── TURBULENCE ───────────────────────────────────────────────────
+    // CHANGED: div(phi.b,k.b) → div(phi,k). Scheme preserved.
+    div(phi,k)          Gauss linearUpwind grad(k);
+    div(phi,omega)      Gauss linearUpwind grad(omega);
+
+    // ── SUSPENDED SEDIMENT ───────────────────────────────────────────
+    // NEW: not present in SedFoam at all.
+    // MUST be upwind or limitedLinear — never linear.
+    // Reason: cs can approach zero; linear schemes produce negative
+    // values (unbounded) which then feed negative erosion rates into
+    // the Exner equation → catastrophic bed growth.
+    div(phi,cs)         Gauss upwind;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+// CHANGED from p_rbgh to p
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+// ── FINITE AREA SCHEMES ──────────────────────────────────────────────────────
+// NEW block — not present in SedFoam at all.
+// These control discretisation of the Exner equation on the 2D faMesh.
+// faSchemes is a SEPARATE dictionary from fvSchemes even though it lives
+// in the same file in some sedExnerFoam versions.
+// In OpenFOAM v2412: place it here as a sub-dictionary.
+
+faSchemes
+{
+    ddtSchemes
+    {
+        // AdamsBashforth is second-order explicit in time.
+        // More accurate than Euler for the bed elevation evolution.
+        // Stable as long as the bed Courant number Co_bed < 1
+        // (guaranteed by maxBedLevelChange in sedimentProperties).
+        default         AdamsBashforth;
+    }
+
+    gradSchemes
+    {
+        default         Gauss linear;
+    }
+
+    divSchemes
+    {
+        default         none;
+
+        // Bedload flux divergence — upwind to prevent oscillations
+        // in q_b near the threshold (θ just above θ_c).
+        div(qs)         Gauss upwind;
+
+        // Avalanche redistribution flux
+        div(qav)        Gauss linear;
+    }
+
+    laplacianSchemes
+    {
+        default         Gauss linear corrected;
+    }
+
+    interpolationSchemes
+    {
+        default         linear;
+    }
+
+    snGradSchemes
+    {
+        default         corrected;
+    }
+}
+
+// ************************************************************************* //

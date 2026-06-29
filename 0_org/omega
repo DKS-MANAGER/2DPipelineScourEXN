@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 450.6;    // = 100*sqrt(8.7e-5)/(0.09*0.1*0.23)
+
+boundaryField
+{
+    inlet
+    {
+        // PRESERVED: same formula as SedFoam omega.b
+        // omega = 100*sqrt(k) / (Cmu * coeff * L)
+        // Cmu=0.09, coeff=0.1, L=0.23 m (length scale)
+        // Ramped consistently with k: omega ~ sqrt(k) so ramp = (t/4)
+        type            codedFixedValue;
+        value           uniform 450.6;
+        name            inletOmega;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            scalarField& field = *this;
+            scalar t = this->db().time().value();
+            scalar kFull  = 8.7e-5;
+            scalar omFull = 100.0*sqrt(kFull)/(0.09*0.1*0.23);
+            forAll(field, faceI)
+            {
+                // omega ~ sqrt(k), k ramps as (t/4)^2, so omega ramps as (t/4)
+                field[faceI] = (t <= 4.0)
+                    ? (t/4.0)*omFull
+                    : omFull;
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    seabed
+    {
+        // FIXED: was zeroGradient — must be omegaWallFunction for k-w SST.
+        // kn = roughness height = 3*d50 (Nikuradse) = 3*2e-4 = 6e-4 m approx.
+        // Using same kn as cylinder for consistency.
+        type            omegaWallFunction;
+        value           uniform 450.6;
+        kn              uniform 5.36e-6;    // preserved from SedFoam cylinder
+    }
+
+    cylinder
+    {
+        // PRESERVED exactly: omegaWallFunction with kn from SedFoam
+        type            omegaWallFunction;
+        value           uniform 450.6;
+        kn              uniform 5.36e-6;
+    }
+
+    top
+    {
+        type            zeroGradient;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

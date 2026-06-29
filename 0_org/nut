@@ -1,0 +1,66 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      nut;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform 1e-10;
+
+boundaryField
+{
+    inlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    outlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    seabed
+    {
+        // RENAMED from "bottom". nutkWallFunction is correct —
+        // nut is computed FROM k and omega by the wall function, not set by you.
+        // "calculated" would also work but nutkWallFunction is more explicit.
+        type            nutkWallFunction;
+        value           uniform 0;
+    }
+
+    cylinder
+    {
+        // PRESERVED exactly from SedFoam
+        type            nutkWallFunction;
+        value           uniform 0;
+    }
+
+    top
+    {
+        // RENAMED from "surface"
+        type            calculated;
+        value           uniform 0;
+    }
+
+    frontAndBack
+    {
+        // RENAMED from lateralfront + lateralback
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

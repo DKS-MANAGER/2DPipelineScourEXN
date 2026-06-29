@@ -1,0 +1,72 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       pointVectorField;    // CRITICAL: points, not cells
+    location    "0";
+    object      pointDisplacement;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Mesh point displacement field for displacementLaplacian motion solver.
+// sedExnerFoam writes the Exner-computed bed displacement into the
+// "seabed" BC at each timestep. All other patches are pinned.
+
+dimensions      [0 1 0 0 0 0 0];    // metres displacement
+
+internalField   uniform (0 0 0);    // all points start at zero displacement
+
+boundaryField
+{
+    seabed
+    {
+        // sedExnerFoam writes the normal bed displacement here at runtime.
+        // The displacement magnitude = dz_b = (Exner flux divergence) * dt / (1-porosity)
+        // Direction is always wall-normal (vertical for a flat bed = y-direction).
+        // uniformNormalFixedValue applies the scalar Exner displacement
+        // as a vector in the patch-normal direction automatically.
+        type            uniformNormalFixedValue;
+        uniformValue    uniform 0;   // overwritten by solver at each timestep
+    }
+
+    cylinder
+    {
+        // PINNED. This is the constraint that prevents the O-grid from collapsing.
+        // Every point on the cylinder surface has zero displacement — always.
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    inlet
+    {
+        // Inlet face is pinned in x (no streamwise stretch).
+        // Allow y-displacement to follow bed deformation at the inlet corner.
+        // fixedNormalSlip pins the normal component (x) and frees tangential (y).
+        type            fixedNormalSlip;
+        n               (1 0 0);    // normal to inlet = x-direction
+        value           uniform (0 0 0);
+    }
+
+    outlet
+    {
+        // Mirror of inlet — pin x-normal, free y to follow bed.
+        type            fixedNormalSlip;
+        n               (1 0 0);
+        value           uniform (0 0 0);
+    }
+
+    top
+    {
+        // Free surface is rigid lid — no vertical displacement.
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    frontAndBack
+    {
+        // 2D case — empty patches carry no displacement equation.
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

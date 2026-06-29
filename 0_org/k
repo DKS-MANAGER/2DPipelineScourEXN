@@ -1,0 +1,95 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 8.7e-5;    // matches SedFoam k_inlet (fully developed)
+
+boundaryField
+{
+    inlet
+    {
+        // PRESERVED: same ramp as SedFoam — k ramps as (t/4)^2 * k_full
+        // k_full = 8.7e-5 m2/s2 (from SedFoam k.b)
+        type            codedFixedValue;
+        value           uniform 8.7e-5;
+        name            inletTKE;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            scalarField& field = *this;
+            scalar t = this->db().time().value();
+            scalar kFull = 8.7e-5;
+            forAll(field, faceI)
+            {
+                field[faceI] = (t <= 4.0)
+                    ? (t/4.0)*(t/4.0)*kFull
+                    : kFull;
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    seabed
+    {
+        // RENAMED from "bottom". Value preserved.
+        type            kqRWallFunction;
+        value           uniform 2.5e-3;
+    }
+
+    cylinder
+    {
+        // FIXED: was fixedValue 1e-9 (wrong for wall-function mesh).
+        // kqRWallFunction is the correct BC when y+ > 30.
+        type            kqRWallFunction;
+        value           uniform 8.7e-5;
+    }
+
+    top
+    {
+        // RENAMED from "surface"
+        type            zeroGradient;
+    }
+
+    frontAndBack
+    {
+        // RENAMED from lateralfront + lateralback
+        type            empty;
+    }
+}
+
+// ************************************************************************* //
+
+

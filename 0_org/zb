@@ -1,0 +1,57 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       areaScalarField;     // NOT volScalarField — this is a faMesh field
+    location    "0";
+    object      zb;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Bed elevation [m] measured from a fixed datum (y = 0 = initial flat bed).
+// Lives on the 2D faMesh projected onto the "seabed" patch.
+// Positive zb = bed above datum, negative = scour below datum.
+// Initial flat bed: zb = 0 everywhere.
+
+dimensions      [0 1 0 0 0 0 0];    // metres
+
+internalField   uniform 0;          // flat bed at t=0
+
+boundaryField
+{
+    // NOTE: these are faMesh EDGE patches, not 3D volume patches.
+    // Their names are defined in constant/faMesh/faBoundary
+    // after you run makeFaMesh. The names below are standard
+    // sedExnerFoam conventions — verify against your faBoundary file.
+
+    inlet
+    {
+        // Bed elevation at inlet is fixed — the upstream bed does not
+        // change during the simulation (scour is local to the cylinder).
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    outlet
+    {
+        // Allow bed elevation to evolve freely at outlet —
+        // deposition may occur downstream of the cylinder.
+        type            zeroGradient;
+    }
+
+    cylinder
+    {
+        // CRITICAL: bed cannot move at the cylinder contact line.
+        // fixedValue 0 pins the Exner equation at this edge.
+        // Without this, the solver produces unbounded scour at the
+        // cylinder base within the first morphological timestep.
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    // If your faMesh has a "seabed_top" or "top" edge (where seabed
+    // patch meets the top boundary) — add zeroGradient there too.
+    // Check constant/faMesh/faBoundary after running makeFaMesh.
+}
+
+// ************************************************************************* //

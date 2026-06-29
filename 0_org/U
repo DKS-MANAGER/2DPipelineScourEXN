@@ -1,0 +1,111 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | www.openfoam.com                                |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;              // FIXED: was "Ub"
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        // PRESERVED: same log-law from SedFoam U.b
+        // u* = 0.04318 m/s, kappa = 0.41, z0 = 3e-5 m
+        // CHANGED: y offset removed. SedFoam had bed at y=-0.025;
+        //          sedExnerFoam bed starts at y=0, so Cf[faceI].y() is used directly.
+        // PRESERVED: 4-second linear ramp-up (essential — avoids pressure spike at t=0)
+        type            codedFixedValue;
+        value           uniform (0 0 0);
+        name            inletLogLaw;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            const fvPatch& boundaryPatch = patch();
+            const vectorField& Cf = boundaryPatch.Cf();
+            vectorField& field = *this;
+            scalar t = this->db().time().value();
+            forAll(Cf, faceI)
+            {
+                scalar y = Cf[faceI].y();   // distance from bed (bed is at y=0)
+                scalar z0 = 3.0e-5;         // roughness length [m]
+                scalar ustar = 0.04318;     // friction velocity [m/s]
+                scalar kappa = 0.41;        // von Karman constant
+
+                if (y > z0)                 // avoid log(0) at bed face
+                {
+                    scalar Umag = (ustar/kappa) * log(y/z0);
+                    scalar ramp = (t <= 4.0) ? (0.1 + 0.9*(t/4.0)) : 1.0;
+                    field[faceI] = vector(ramp * Umag, 0, 0);
+                }
+                else
+                {
+                    field[faceI] = vector(0, 0, 0);
+                }
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+
+    seabed
+    {
+        // CHANGED from fixedValue to movingWallVelocity.
+        // This is mandatory for any wall patch that deforms.
+        // It enforces no-slip correctly by subtracting the mesh velocity.
+        type            movingWallVelocity;
+        value           uniform (0 0 0);
+    }
+
+    cylinder
+    {
+        // Cylinder never moves — plain noSlip is correct and more robust
+        type            noSlip;
+    }
+
+    top
+    {
+        // RENAMED from "surface". Free surface treated as slip (rigid lid).
+        type            slip;
+    }
+
+    frontAndBack
+    {
+        // RENAMED from "lateralfront"/"lateralback" (merged into one empty patch)
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,176 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    // ── PRESSURE ─────────────────────────────────────────────────────────
+    // CHANGED: p_rbgh → p. GAMG settings preserved — they are good.
+    // GAMG with DIC smoother is the correct choice for the pressure
+    // Poisson equation on a structured-ish snappy mesh.
+    p
+    {
+        solver              GAMG;
+        tolerance           1e-6;
+        relTol              1e-4;
+        smoother            DIC;
+        nPreSweeps          0;
+        nPostSweeps         2;
+        nFinestSweeps       2;
+        cacheAgglomeration  true;
+        nCellsInCoarsestLevel 10;
+        agglomerator        faceAreaPair;
+        mergeLevels         1;
+    }
+    pFinal
+    {
+        $p;
+        relTol              0;      // tight on final corrector
+    }
+
+    // ── VELOCITY ─────────────────────────────────────────────────────────
+    // CHANGED: U.b → U. PBiCGStab preferred over PBiCG in v2412
+    // (more robust on deforming meshes with skewed cells near bed).
+    U
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-6;
+        relTol          0.01;
+    }
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
+
+    // ── TURBULENCE ───────────────────────────────────────────────────────
+    // CHANGED: k.b → k, omega.b → omega. Tolerances preserved.
+    // Tighter tolerance on omega (1e-9) preserved — omega is stiff
+    // near the bed where omegaWallFunction applies very large values.
+    "(k|omega)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-8;
+        relTol          0.01;
+    }
+    "(k|omega)Final"
+    {
+        $"(k|omega)";
+        relTol          0;
+    }
+
+    // ── SUSPENDED SEDIMENT ───────────────────────────────────────────────
+    // NEW: not in SedFoam at all.
+    // Tight tolerance (1e-10) is important — cs errors accumulate over
+    // the morphological timesteps and corrupt the Exner mass balance.
+    // minIter 1 ensures at least one solve even if initial residual is small.
+    cs
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0;
+        minIter         1;
+    }
+    csFinal
+    {
+        $cs;
+    }
+
+    // ── MESH MOTION (displacement Laplacian) ─────────────────────────────
+    // NEW: not in SedFoam (static mesh).
+    // cellDisplacement is the internal field name used by
+    // displacementLaplacian for the Laplace solve.
+    // GAMG is efficient here — the Laplace equation is well-conditioned.
+    cellDisplacement
+    {
+        solver          GAMG;
+        tolerance       1e-8;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+    cellDisplacementFinal
+    {
+        $cellDisplacement;
+    }
+}
+
+// ── RELAXATION ───────────────────────────────────────────────────────────────
+relaxationFactors
+{
+    // REMOVED: pa relaxation (granular pressure — deleted field)
+    // Light under-relaxation on U and p stabilises PIMPLE on
+    // the deforming mesh, especially during the first few scour timesteps.
+    equations
+    {
+        U               0.9;
+        "(k|omega)"     0.7;
+        cs              0.9;
+    }
+}
+
+// ── PIMPLE ───────────────────────────────────────────────────────────────────
+PIMPLE
+{
+    nOuterCorrectors        2;      // outer PIMPLE iterations
+    nCorrectors             2;      // pressure correctors per outer loop
+    nNonOrthogonalCorrectors 1;     // for non-orthogonal cells near cylinder
+
+    // CHANGED: removed nAlphaCorr and correctAlpha (two-phase only)
+
+    // CHANGED: pRefPoint replaced with pRefCell.
+    // pRefPoint = (0.9999, 0.2049, 0.0) from SedFoam may not exist
+    // after snappy remeshes. pRefCell 0 always works — it anchors
+    // the pressure at the first internal cell (near inlet corner).
+    pRefCell        0;
+    pRefValue       0;
+
+    // Morphological update coupling.
+    // The Exner equation is solved once per outer PIMPLE corrector.
+    // This ensures the bed elevation is updated with the latest
+    // wall shear stress from each pressure-velocity iteration.
+    morphologicalUpdate     yes;
+    morphoFrequency         1;
+}
+
+// ── FASOLUTION (Exner equation on faMesh) ────────────────────────────────────
+// NEW block — not present in SedFoam at all.
+// Controls the PCG solver for zb (bed elevation) on the 2D faMesh.
+faSolution
+{
+    solvers
+    {
+        zb
+        {
+            solver          PCG;
+            preconditioner  DIC;
+            tolerance       1e-10;
+            relTol          0;
+            // Tight tolerance mandatory — zb errors are integrated over
+            // all morphological timesteps and directly set mesh displacement.
+            // A loose tolerance here (e.g. 1e-6) causes mesh drift that
+            // compounds into non-physical bed profiles by t=10s.
+        }
+    }
+}
+
+// ************************************************************************* //
