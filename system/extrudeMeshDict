@@ -1,54 +1,49 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.1.0                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      extrudeProperties;
+    location    "system";
+    object      extrudeMeshDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+//
+// extrudeMeshDict
+//
+// PURPOSE: enforce the 2D empty-patch condition on frontAndBack.
+//
+// The blockMesh already creates a single-cell slab (z: 0 to 0.001).
+// snappyHexMesh preserves this z-thickness but writes frontAndBack
+// as type 'wall' (it doesn't know it's a 2D symmetry plane).
+// extrudeMesh with constructFrom mesh re-processes the existing mesh
+// and correctly sets frontAndBack as the 2D empty patch pair.
+//
+// PATCH NAME: must match constant/polyMesh/boundary exactly.
+// Verify with: grep -B1 'empty' constant/polyMesh/boundary
 
-// What to extrude:
-//      patch   : from patch of another case ('sourceCase')
+constructFrom   mesh;
 
-constructFrom patch;
-sourceCase ".";
-sourcePatches (lateralback);
+sourceCase      ".";
 
-// If construct from patch: patch to use for back (can be same as sourcePatch)
-exposedPatchName lateralback;
+// The front face patch (z=0) -- extrudeMesh will pair it with
+// the back face (z=0.001) and set both to type empty.
+sourcePatches   (frontAndBack);
 
-// Flip surface normals before usage.
-flipNormals false;
+exposedPatchName frontAndBack;
 
-//- Linear extrusion in point-normal direction
-extrudeModel        linearNormal;
-//extrudeModel        linearDirection;
+flipNormals     false;
 
-nLayers             1;
+extrudeModel    linearNormal;
 
-expansionRatio      1.0;
+nLayers         1;
 
-linearDirectionCoeffs
-{
-    direction       (0 0 1);
-    thickness       0.001;
-}
+expansionRatio  1.0;
 
 linearNormalCoeffs
 {
-    thickness       0.001;
+    thickness   0.001;
 }
 
-// Do front and back need to be merged? Usually only makes sense for 360
-// degree wedges.
-mergeFaces false;
+mergeFaces      false;
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// ************************************************************************* //
