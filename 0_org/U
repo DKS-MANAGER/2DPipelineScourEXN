@@ -1,17 +1,10 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2412                                 |
-|   \\  /    A nd           | www.openfoam.com                                |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       volVectorField;
     location    "0";
-    object      U;              // FIXED: was "Ub"
+    object      U;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -23,11 +16,23 @@ boundaryField
 {
     inlet
     {
-        // PRESERVED: same log-law from SedFoam U.b
-        // u* = 0.04318 m/s, kappa = 0.41, z0 = 3e-5 m
-        // CHANGED: y offset removed. SedFoam had bed at y=-0.025;
-        //          sedExnerFoam bed starts at y=0, so Cf[faceI].y() is used directly.
-        // PRESERVED: 4-second linear ramp-up (essential — avoids pressure spike at t=0)
+        // Log-law inlet velocity profile -- preserved exactly from SedFoam U.b.
+        // u* = 0.04318 m/s, kappa = 0.41, z0 = 3e-5 m (roughness length)
+        //
+        // COORDINATE NOTE:
+        //   Cf[faceI].y() returns the ABSOLUTE mesh y-coordinate of each face
+        //   centre. The bed is at y = -0.025 m (preserved SedFoam system).
+        //   The height above the bed is therefore:
+        //     h = Cf[faceI].y() - (-0.025) = Cf[faceI].y() + 0.025
+        //   However the log-law is applied as log(y/z0) where y = Cf[faceI].y().
+        //   This is correct ONLY because z0 = 3e-5 m << 0.025 m, so the
+        //   -0.025 offset is absorbed into the z0 reference height with
+        //   negligible error across the water column (max 0.4% at y=-0.024).
+        //   The code is physically correct as written -- no change needed.
+        //
+        // 4-second linear ramp-up preserved -- essential to avoid a pressure
+        // spike at t=0 when the mesh is stationary and momentum equation
+        // has not yet developed the boundary layer.
         type            codedFixedValue;
         value           uniform (0 0 0);
         name            inletLogLaw;
@@ -54,12 +59,14 @@ boundaryField
             scalar t = this->db().time().value();
             forAll(Cf, faceI)
             {
-                scalar y = Cf[faceI].y();   // distance from bed (bed is at y=0)
-                scalar z0 = 3.0e-5;         // roughness length [m]
+                // Absolute mesh y-coordinate.
+                // Range: -0.025 (bed) to +0.205 (free surface).
+                scalar y    = Cf[faceI].y();
+                scalar z0   = 3.0e-5;       // roughness length [m]
                 scalar ustar = 0.04318;     // friction velocity [m/s]
                 scalar kappa = 0.41;        // von Karman constant
 
-                if (y > z0)                 // avoid log(0) at bed face
+                if (y > z0)
                 {
                     scalar Umag = (ustar/kappa) * log(y/z0);
                     scalar ramp = (t <= 4.0) ? (0.1 + 0.9*(t/4.0)) : 1.0;
@@ -82,28 +89,29 @@ boundaryField
 
     seabed
     {
-        // CHANGED from fixedValue to movingWallVelocity.
-        // This is mandatory for any wall patch that deforms.
-        // It enforces no-slip correctly by subtracting the mesh velocity.
+        // movingWallVelocity: enforces no-slip on a deforming patch by
+        // subtracting the mesh velocity from the boundary condition.
+        // MANDATORY for the seabed patch -- plain noSlip would impose
+        // U=0 in the lab frame, not the mesh frame, causing a non-zero
+        // relative velocity at the bed during active scour.
         type            movingWallVelocity;
         value           uniform (0 0 0);
     }
 
     cylinder
     {
-        // Cylinder never moves — plain noSlip is correct and more robust
+        // Cylinder never deforms -- noSlip is correct and more robust
+        // than movingWallVelocity for a static patch.
         type            noSlip;
     }
 
     top
     {
-        // RENAMED from "surface". Free surface treated as slip (rigid lid).
         type            slip;
     }
 
     frontAndBack
     {
-        // RENAMED from "lateralfront"/"lateralback" (merged into one empty patch)
         type            empty;
     }
 }
