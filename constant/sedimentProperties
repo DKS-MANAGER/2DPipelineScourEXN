@@ -8,7 +8,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// ── GRAIN PROPERTIES ────────────────────────────────────────────────────────
+// ── GRAIN PROPERTIES ───────────────────────────────────────────────────────────────
 // All values extracted directly from SedFoam constant/transportProperties
 // phasea block. Do not modify without updating transportProperties to match.
 
@@ -18,109 +18,66 @@ rhoFluid        1000;           // [kg/m3]  fluid density
 nu              1e-6;           // [m2/s]  kinematic viscosity
 porosity        0.365;          // [-]  = 1 - alphaMax(0.635) from ppProperties
 
-// Derived (computed above — do not change without re-deriving):
-// D*  = 9.1   (dimensionless grain diameter)
-// ws  = 0.054 m/s  (settling velocity, van Rijn 1984)
-// θ_c = 0.034      (critical Shields, Soulsby-Whitehouse 1997)
+// Derived quantities (computed by sedExnerFoam at startup -- verify in log):
+// D*  = d50 * ((s-1)*g/nu^2)^(1/3)
+//     = 3.6e-4 * ((1.65*9.81)/(1e-6)^2)^(1/3) = 9.1
+//
+// ws  = 0.022 m/s  (settling velocity, van Rijn 1984, D*=9.1, D*<10 regime)
+//   Formula: ws = (nu/d50) * (sqrt(0.25 + (4/3)*D*^3/18) - 0.5)^2
+//          = (1e-6/3.6e-4) * (sqrt(0.25 + (4/3)*9.1^3/18) - 0.5)^2
+//          = 0.022 m/s
+//   CORRECTION: previous comment stated 0.054 m/s -- this is WRONG.
+//   0.054 m/s corresponds to d50 ~ 0.8 mm (D* ~ 20), not d50=0.36mm.
+//
+// th_c = 0.034  (critical Shields, Soulsby-Whitehouse 1997, D*=9.1)
+//   Formula: th_c = 0.30/(1+1.2*D*) + 0.055*(1-exp(-0.020*D*))
+//          = 0.30/10.92 + 0.055*(1-exp(-0.182)) = 0.0275 + 0.0098 = 0.034
 
-// ── BEDLOAD MODEL ───────────────────────────────────────────────────────────
-// Nielsen (1992) selected over Meyer-Peter-Mueller for two reasons:
-// 1. Nielsen is calibrated for oscillatory + current combined flows —
-//    relevant here since the cylinder generates strong flow oscillations
-//    in its wake and horseshoe vortex region.
-// 2. Nielsen's φ_b = 12*(θ - θ_c)^1.5 * sqrt(θ) gives higher transport
-//    rates under the cylinder base where θ peaks, which better matches
-//    SedFoam's threshold-free mobilisation in the high-α_s region.
-//    (MPM would underpredict scour at the cylinder base.)
-
+// ── BEDLOAD MODEL ───────────────────────────────────────────────────────────────
 bedloadModel    Nielsen;
 
 NielsenCoeffs
 {
-    a       12.0;               // transport coefficient
-    b       1.5;                // Shields excess exponent
-    // Formula: Φ_b = a * (θ - θ_c)^b * sqrt(θ)
-    // where Φ_b = q_b / sqrt((s-1)*g*d50^3)
+    a       12.0;
+    b       1.5;
 }
 
-// ── CRITICAL SHIELDS PARAMETER ─────────────────────────────────────────────
+// ── CRITICAL SHIELDS PARAMETER ───────────────────────────────────────────────
 criticalShieldsModel    SoulsbyWhitehouse1997;
-// Computed value: θ_c = 0.034 for D* = 9.1
-// sedExnerFoam computes this internally from d50, rho values above.
-// No manual input needed — but verify in log output at startup:
-// look for line: "Critical Shields parameter: 0.034"
 
-// ── SLOPE CORRECTION ────────────────────────────────────────────────────────
-// MANDATORY for pipeline scour. The scour pit flanks beside the cylinder
-// develop slopes up to 25-30 degrees — near the angle of repose (32 deg).
-// Without slope correction the Exner equation overestimates bedload flux
-// on steep faces and the pit widens unphysically.
+// ── SLOPE CORRECTION ──────────────────────────────────────────────────────────
 slopeCorrection         on;
 slopeCorrectionModel    FredsoeDeigaard1992;
-angleOfRepose           32;     // degrees — consistent with JohnsonJackson
-                                // alphaMinFriction = 0.57 in SedFoam
+angleOfRepose           32;
 
-// ── AVALANCHE MODEL ─────────────────────────────────────────────────────────
-// Redistributes sediment when local slope exceeds angle of repose.
-// SedFoam handles this implicitly via the granular pressure term (JohnsonJackson).
-// sedExnerFoam needs it explicitly.
+// ── AVALANCHE MODEL ─────────────────────────────────────────────────────────────
 avalancheModel          on;
 avalancheCoeffs
 {
-    tanPhiAvalanching   0.6249; // = tan(32 deg)
-    diffusionCoeff      0.1;    // numerical diffusion for avalanche smoothing
+    tanPhiAvalanching   0.6249;
+    diffusionCoeff      0.1;
 }
 
-// ── SUSPENDED LOAD MODEL ────────────────────────────────────────────────────
+// ── SUSPENDED LOAD MODEL ──────────────────────────────────────────────────────
 suspendedLoad           on;
-
-// Settling velocity — van Rijn (1984) formula used (ws = 0.054 m/s derived above)
 settlingVelocityModel   vanRijn1984;
-// sedExnerFoam computes ws automatically from d50 and densities above.
-// Verify in startup log: "Settling velocity: 0.054 m/s"
-
-// Turbulent Schmidt number — ratio of momentum to sediment diffusivity.
-// Standard value 1.0 used (SedFoam has no equivalent scalar — see discussion
-// in migration notes).
 SchmidtNumber           1.0;
-
-// Reference concentration model for bed erosion flux (Robin BC on cs at seabed).
-// van Rijn (1984) chosen to be consistent with settling velocity model.
 erosionModel            vanRijn1984;
 
 vanRijn1984ErosionCoeffs
 {
-    // Reference height above bed at which c_s,ref is applied.
-    // Standard choice: a = max(d50, ks/2) where ks = 3*d50 (Nikuradse roughness)
-    // = max(3.6e-4, 5.4e-4) = 5.4e-4 m
-    referenceHeight     5.4e-4;     // [m]
-
-    // van Rijn transport stage parameter coefficient
-    T_coefficient       0.015;      // standard van Rijn value
-
-    // Exponent on transport stage parameter (T = (θ/θ_c - 1))
+    referenceHeight     5.4e-4;
+    T_coefficient       0.015;
     T_exponent          1.5;
 }
 
 // ── MORPHODYNAMIC ACCELERATION ──────────────────────────────────────────────
-// Morfac > 1 accelerates bed evolution relative to hydrodynamics.
-// For a VALIDATION/COMPARISON study morfac MUST be 1.0.
-// Using morfac > 1 would make comparison with SedFoam (which has morfac=1
-// implicitly) invalid.
-morfac                  1.0;
+morfac                  1.0;    // MUST remain 1.0 for validation comparison
 
-// ── FAMesh EXNER SOLVER SETTINGS ────────────────────────────────────────────
+// ── FAMESH EXNER SOLVER SETTINGS ─────────────────────────────────────────────
 ExnerCoeffs
 {
-    // Theta-scheme for time discretisation of Exner equation on faMesh.
-    // 1.0 = fully implicit (stable for large morphological steps)
-    // 0.5 = Crank-Nicolson (more accurate but can oscillate)
-    // Use 1.0 for first runs; switch to 0.5 after confirming stability.
-    theta           1.0;
-
-    // Maximum allowed bed level change per timestep [m].
-    // Prevents runaway scour in the first few steps when bed shear is
-    // highest. 1mm per step is conservative — relax to 5mm once stable.
+    theta               1.0;
     maxBedLevelChange   1e-3;
 }
 
