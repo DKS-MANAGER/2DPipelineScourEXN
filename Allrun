@@ -1,18 +1,68 @@
 #!/bin/sh
+cd "${0%/*}" || exit 1
 
-# create the mesh
+# ============================================================
+# 2DPipelineScourEXN — Allrun
+# OpenFOAM v2412  |  8-core WSL laptop
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. Clean and generate background hex mesh
+# ------------------------------------------------------------
 foamCleanPolyMesh
-blockMesh
-sed -i -e 's/empty/emptyy/g' constant/polyMesh/boundary
-snappyHexMesh -overwrite
-sed -i -e 's/emptyy/empty/g' constant/polyMesh/boundary
-extrudeMesh
+blockMesh 2>&1 | tee log.blockMesh
 
-# create the intial time folder
+# ------------------------------------------------------------
+# 2. Protect empty patches before snappy overwrites boundary
+#    snappyHexMesh -overwrite replaces constant/polyMesh;
+#    the sed trick renames 'empty' -> 'emptyy' so snappy does
+#    not touch those patches, then restores them afterwards.
+# ------------------------------------------------------------
+sed -i -e 's/\btype\s*empty;/type emptyy;/g' constant/polyMesh/boundary
+
+# ------------------------------------------------------------
+# 3. Run snappyHexMesh in PARALLEL on 8 cores
+#    decomposePar is run on the background blockMesh first,
+#    then snappy overwrites each processor*/constant/polyMesh
+# ------------------------------------------------------------
+decomposePar 2>&1 | tee log.decomposePar_snappy
+mpirun -np 8 snappyHexMesh -overwrite -parallel 2>&1 | tee log.snappyHexMesh
+
+# Reconstruct the snappy mesh back to constant/polyMesh
+reconstructParMesh -constant 2>&1 | tee log.reconstructParMesh
+
+# Restore empty patch type
+sed -i -e 's/\btype\s*emptyy;/type empty;/g' constant/polyMesh/boundary
+
+# ------------------------------------------------------------
+# 4. Extrude to single-cell 2D domain
+# ------------------------------------------------------------
+extrudeMesh 2>&1 | tee log.extrudeMesh
+
+# ------------------------------------------------------------
+# 5. Verify mesh quality — abort if mesh is bad
+# ------------------------------------------------------------
+checkMesh 2>&1 | tee log.checkMesh
+if grep -q 'FOAM exiting' log.checkMesh; then
+    echo "ERROR: checkMesh failed. Fix mesh before running solver."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# 6. Copy initial conditions
+# ------------------------------------------------------------
 cp -r 0_org 0
 
-# Decompose the case in order to run in parallel (on 16 cores)
-decomposePar
+# ------------------------------------------------------------
+# 7. Decompose final mesh for parallel solver run
+# ------------------------------------------------------------
+decomposePar 2>&1 | tee log.decomposePar_solver
 
-# Run sedFoam in parallel
-mpirun -np 16 sedFoam_rbgh -parallel > log&
+# ------------------------------------------------------------
+# 8. Run sedExnerFoam in parallel on 8 cores
+#    sedExnerFoam: morphodynamic Exner scour solver
+#    (replaces sedFoam_rbgh which is the two-phase solver)
+# ------------------------------------------------------------
+mpirun -np 8 sedExnerFoam -parallel 2>&1 | tee log.sedExnerFoam
+
+# ============================================================
