@@ -12,14 +12,9 @@ numberOfSubdomains  8;
 
 method              scotch;
 
-// v2412: singleProcessorFaceSets 'sets' takes a list of (faceSetName processor) tuples.
-constraints
-{
-    seabedConstraint
-    {
-        type        singleProcessorFaceSets;
-        sets        ((seabed 0));
-    }
-}
+// NOTE: singleProcessorFaceSets constraint for 'seabed' is intentionally
+// omitted here. It must only be added AFTER snappyHexMesh has run and the
+// seabed faceSet exists in constant/polyMesh/sets/. Re-add it before
+// running sedExnerFoam in parallel.
 
 // ************************************************************************* //
