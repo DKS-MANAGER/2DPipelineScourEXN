@@ -16,6 +16,7 @@ nu              [0 2 -1 0 0 0 0]  1e-6;     // kinematic viscosity [m2/s]
 rhoW            [1 -3 0 0 0 0 0]  1000;     // water density [kg/m3]
 rhoS            [1 -3 0 0 0 0 0]  2650;     // sediment density [kg/m3]
 d50             [0 1 0 0 0 0 0]   3.6e-4;   // median grain diameter [m]
+dS              [0 1 0 0 0 0 0]   3.6e-4;   // = d50 (sedExnerFoam keyword)
 porosity        [0 0 0 0 0 0 0]   0.365;    // 1 - alphaMax(0.635)
 angleOfRepose   [0 0 0 0 0 0 0]   32;
 SchmidtNumber   [0 0 0 0 0 0 0]   1.0;
