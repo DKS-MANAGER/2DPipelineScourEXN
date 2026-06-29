@@ -8,26 +8,20 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// 8 cores: safe for WSL laptop (avoids over-subscription).
-// snappyHexMesh parallel: decomposePar first, then mpirun -np 8 snappyHexMesh
-// sedExnerFoam parallel: same decomposition reused for the solver run.
 numberOfSubdomains  8;
 
-// scotch: best automatic decomposition for unstructured snappy meshes.
-// No geometry input needed; minimises inter-processor face count.
 method              scotch;
 
 // CRITICAL for sedExnerFoam:
-// The Exner finite-area solver is sequential -- all faMesh faces on
-// the seabed patch must reside on a single processor (rank 0).
-// This constraint forces scotch to keep the entire seabed patch
-// on processor 0 while freely distributing all other cells.
+// singleProcessorFaceSets keeps all seabed patch faces on rank 0
+// so the sequential faMesh / Exner solver works in a parallel run.
+// v2412 API requires keyword 'sets' (not 'faceSets').
 constraints
 {
     seabedConstraint
     {
         type        singleProcessorFaceSets;
-        faceSets    (seabed);
+        sets        (seabed);
         processor   0;
     }
 }
