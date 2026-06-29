@@ -1,0 +1,62 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      faOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+//
+// faOptions — finite-area source terms for sedExnerFoam
+//
+// Controls the sediment transport models that drive the Exner equation:
+//   dz_b/dt = -1/(1-n) * div(q_b + q_s)
+// where q_b = bedload flux, q_s = suspended load flux, n = porosity.
+//
+// All model parameters are consistent with constant/sedimentProperties:
+//   d50=3.6e-4 m, rhoS=2650, porosity=0.365, D*=9.1, th_c=0.034
+
+bedloadModel
+{
+    // Nielsen (1992) bedload transport formula
+    // q_b = a * sqrt(g*(s-1)*d50^3) * (theta - theta_c)^b * theta^0.5
+    // a=12, b=1.5 — calibrated for d50=0.36mm pipeline scour
+    // (Sumer & Fredsoe 2002 validation range)
+    type            Nielsen;
+    a               12.0;
+    b               1.5;
+}
+
+suspendedLoadModel
+{
+    // van Rijn (1984) reference concentration erosion model
+    // C_a = 0.015 * (d50/a) * T^1.5 / D*^0.3
+    // where T = (theta - theta_c) / theta_c  (transport stage parameter)
+    // a = referenceHeight = 1.5*d50 = 5.4e-4 m
+    type                vanRijn1984;
+    referenceHeight     5.4e-4;
+    T_coefficient       0.015;
+    T_exponent          1.5;
+    SchmidtNumber       1.0;
+}
+
+slopeCorrectionModel
+{
+    // Fredsoe & Deigaard (1992) slope correction
+    // Reduces bedload on adverse slopes, increases on favourable slopes.
+    // Critical for stable scour pit morphology around the pipeline.
+    type            FredsoeDeigaard1992;
+    angleOfRepose   32;     // degrees — angle of repose for medium sand
+}
+
+avalancheModel
+{
+    // Avalanche model: redistributes sediment when local slope > tan(phi)
+    // Essential to prevent unphysical oversteepening of scour pit walls.
+    type                on;
+    tanPhiAvalanching   0.6249;   // tan(32 deg) = 0.6249
+    diffusionCoeff      0.1;
+}
+
+// ************************************************************************* //
