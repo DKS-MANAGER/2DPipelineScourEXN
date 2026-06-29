@@ -10,22 +10,13 @@ FoamFile
 //
 // faMeshDefinition — OpenFOAM v2412
 //
-// Required location: system/finite-area/faMeshDefinition
-// (v2412 changed the lookup path from system/ to system/finite-area/)
+// NOTE: v2412 uses 'polyMeshPatches' (not 'boundary' as in older versions)
 //
 // Defines the finite-area (faMesh) surface used by sedExnerFoam to solve
 // the Exner bed-evolution equation. makeFaMesh reads this file and writes
 // the resulting topology to constant/faMesh/.
-//
-// The faMesh is a 2D surface mesh constructed from the boundary faces of
-// the 'seabed' patch. sedExnerFoam integrates the Exner equation on this
-// surface to update bed elevation zb at every timestep.
-//
-// IMPORTANT: the patch name here MUST exactly match the patch name in
-// constant/polyMesh/boundary. Check with:
-//   grep -A1 'type.*wall' constant/polyMesh/boundary
 
-boundary
+polyMeshPatches
 (
     seabed
 );
