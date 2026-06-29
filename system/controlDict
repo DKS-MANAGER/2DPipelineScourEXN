@@ -1,10 +1,3 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.7.1                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -15,7 +8,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// CHANGED from sedFoam — this is what Allrun reads to launch the solver
 application     sedExnerFoam;
 
 startFrom       latestTime;
@@ -25,13 +17,9 @@ startTime       0;
 stopAt          endTime;
 
 // PRESERVED: same 45-second physical end time as SedFoam.
-// This is non-negotiable for a direct comparison — both simulations
-// must cover identical physical time windows.
 endTime         45;
 
 // Initial timestep — same as SedFoam for the ramp-up phase (t < 4s).
-// The adjustable timestepper will increase this automatically once
-// the flow is established and the CFL allows it.
 deltaT          1e-4;
 
 writeControl    adjustableRunTime;
@@ -55,45 +43,54 @@ runTimeModifiable on;
 
 adjustTimeStep  yes;
 
-// Fluid Courant number limit.
-// PRESERVED from SedFoam (0.1) during ramp-up.
-// After t > 4s you can increase to 0.4 by editing here — the PIMPLE
-// loop handles higher Co without instability.
+// Fluid Courant number limit -- preserved from SedFoam during ramp-up.
 maxCo           0.1;
 
-// REMOVED: maxAlphaCo — SedFoam-specific, not valid in sedExnerFoam.
-// sedExnerFoam has no alpha field to limit.
+// REMOVED: maxAlphaCo -- SedFoam-specific, not valid in sedExnerFoam.
 
 // INCREASED from SedFoam's 1.5e-4 to 5e-3.
-// Reasoning: SedFoam needs tiny dt for explicit two-phase drag coupling.
-// sedExnerFoam's PIMPLE is implicit — the bottleneck is the mesh motion
-// Courant number (Co_mesh = mesh_velocity * dt / dx), not the fluid CFL.
-// At peak scour rate ~1mm/s and dx~1mm near bed: Co_mesh = 1e-3*5e-3/1e-3 = 5e-3 << 1.
-// This gives a ~33x speedup over SedFoam for the same physical time.
+// sedExnerFoam's PIMPLE is implicit -- bottleneck is mesh motion Courant
+// number, not fluid CFL. Gives ~33x speedup over SedFoam wall-clock time.
 maxDeltaT       5e-3;
 
 // ── FUNCTIONS ───────────────────────────────────────────────────────────────
 functions
 {
-    // Monitor scour depth at cylinder base for real-time comparison.
-    // Samples zb at the point directly below the cylinder centre.
-    // Adjust xyz coordinates to match your cylinder centre location
-    // after blockMesh — check from blockMeshDict.
     scourDepthProbe
     {
         type            probes;
         libs            (sampling);
         writeControl    timeStep;
-        writeInterval   10;         // every 10 steps — lightweight
+        writeInterval   10;
         probeLocations
         (
-            (2.0 0.0 0.075)         // directly below cylinder centre at bed
+            // FIXED: was (2.0  0.0  0.075)
+            //
+            // Error 1 -- y=0.0: bed is at y=-0.025 in preserved SedFoam
+            // coordinate system. A probe at y=0 sits 25mm above the bed
+            // in mid-water. zb is a faMesh areaScalarField -- probing it
+            // via a volume probe at y=0 returns the cell-centre interpolated
+            // value, which is zero everywhere except on the bed patch itself.
+            // The probe gave a flat zb=-0.0 readout every timestep while
+            // the mesh was actively deforming.
+            //
+            // Error 2 -- z=0.075: 2D slab spans z=0.0 to z=0.001 only.
+            // z=0.075 is 75x outside the domain. OpenFOAM snaps to nearest
+            // cell (z=0.0005 midplane) but emits a startup warning and
+            // the log coordinate does not match actual probe location.
+            //
+            // Correct location:
+            //   x =  0.0     cylinder centre (SedFoam x=0 coord)
+            //   y = -0.024   1mm above seabed (inside fluid, captures cs)
+            //   z =  0.0005  2D slab midplane centroid
+            ( 0.0  -0.024  0.0005 )
         );
-        fields          (zb cs);    // track both bed elevation and suspended load
+        fields          ( cs );     // cs probed here as volume field
+        // NOTE: zb must be sampled separately via postProcess -func sampleFaDict
+        // because zb is an areaScalarField on faMesh, not a volScalarField.
+        // See README for the faSampleDict setup.
     }
 
-    // Residual monitoring — essential for diagnosing PIMPLE convergence
-    // on the deforming mesh.
     residuals
     {
         type            solverInfo;
