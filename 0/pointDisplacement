@@ -1,3 +1,10 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -7,8 +14,6 @@ FoamFile
     object      pointDisplacement;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Required by dynamicMesh / movingMesh if enabled.
-// All patches fixed (zero displacement) for rigid mesh case.
 
 dimensions      [0 1 0 0 0 0 0];
 
@@ -21,39 +26,29 @@ boundaryField
         type            fixedValue;
         value           uniform (0 0 0);
     }
-
     outlet
     {
         type            fixedValue;
         value           uniform (0 0 0);
     }
-
-    surface
+    top
     {
         type            fixedValue;
         value           uniform (0 0 0);
     }
-
-    bottom
+    seabed
     {
-        type            fixedValue;
+        type            fixedNormalSlip;
+        n               (0 1 0);
         value           uniform (0 0 0);
     }
-
-    lateralfront
+    frontAndBack
     {
         type            empty;
     }
-
-    lateralback
+    frontAndBack
     {
         type            empty;
-    }
-
-    cylinder
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
     }
 }
 

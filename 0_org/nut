@@ -23,22 +23,21 @@ boundaryField
 {
     inlet
     {
-        type            calculated;
+        type            zeroGradient;
         value           uniform 0;
     }
     outlet
     {
-        type            calculated;
+        type            zeroGradient;
         value           uniform 0;
     }
-    surface
+    top
     {
-        type            calculated;
-        value           uniform 0;
+        type            symmetryPlane;
     }
-    bottom
+    seabed
     {
-        type            nutkWallFunction;
+        type            zeroGradient;
         value           uniform 0;
     }
     cylinder
@@ -46,11 +45,11 @@ boundaryField
         type            nutkWallFunction;
         value           uniform 0;
     }
-    lateralfront
+    frontAndBack
     {
         type            empty;
     }
-    lateralback
+    frontAndBack
     {
         type            empty;
     }

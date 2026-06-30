@@ -1,3 +1,10 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -18,36 +25,30 @@ boundaryField
     {
         type            zeroGradient;
     }
-
     outlet
     {
-        type            fixedValue;
+        type            zeroGradient;
         value           uniform 0;
     }
-
-    surface
+    top
     {
         type            symmetryPlane;
     }
-
-    bottom
+    seabed
     {
         type            zeroGradient;
     }
-
-    lateralfront
-    {
-        type            empty;
-    }
-
-    lateralback
-    {
-        type            empty;
-    }
-
     cylinder
     {
         type            zeroGradient;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+    frontAndBack
+    {
+        type            empty;
     }
 }
 

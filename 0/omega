@@ -1,3 +1,10 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -7,82 +14,45 @@ FoamFile
     object      omega;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// omega = k^0.5 / (Cmu^0.25 * l), l=0.01m (1% of pipe D=0.05m)
+// omega ~ 60 * nu / (beta1 * y^2) near wall (omegaWallFunction handles this)
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 0.5;
+internalField   uniform 10;
 
 boundaryField
 {
     inlet
     {
-        type            codedFixedValue;
-        value           uniform 0.5;
-        name            inletOmega;
-
-        codeInclude
-        #{
-            #include "fvCFD.H"
-        #};
-        codeOptions
-        #{
-            -I$(LIB_SRC)/finiteVolume/lnInclude \
-            -I$(LIB_SRC)/meshTools/lnInclude
-        #};
-        codeLibs
-        #{
-            -lfiniteVolume \
-            -lmeshTools
-        #};
-        code
-        #{
-            const fvPatch& boundaryPatch = patch();
-            const vectorField& Cf = boundaryPatch.Cf();
-            scalarField& field = *this;
-            forAll(Cf, faceI)
-            {
-                scalar y    = Cf[faceI].y();
-                scalar ustar = 0.04318;
-                scalar kappa = 0.41;
-                scalar z0   = 3.0e-5;
-                if (y > z0)
-                    field[faceI] = ustar / (kappa * y);
-                else
-                    field[faceI] = ustar / (kappa * z0);
-            }
-        #};
+        type            zeroGradient;
+        value           uniform 10;
     }
-
     outlet
     {
         type            zeroGradient;
     }
-
-    surface
+    top
     {
         type            symmetryPlane;
     }
-
-    bottom
+    seabed
     {
-        type            omegaWallFunction;
-        value           uniform 0.5;
+        type            zeroGradient;
+        value           uniform 10;
     }
-
-    lateralfront
-    {
-        type            empty;
-    }
-
-    lateralback
-    {
-        type            empty;
-    }
-
     cylinder
     {
         type            omegaWallFunction;
-        value           uniform 0.5;
+        value           uniform 10;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+    frontAndBack
+    {
+        type            empty;
     }
 }
 

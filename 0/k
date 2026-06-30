@@ -1,3 +1,10 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -7,77 +14,40 @@ FoamFile
     object      k;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// k = 1.5*(I*U)^2, I=0.05 (5% turbulence intensity), U=0.4 m/s
+// k = 1.5*(0.05*0.4)^2 = 6e-4 m2/s2
 
 dimensions      [0 2 -2 0 0 0 0];
 
-internalField   uniform 8.7e-5;
+internalField   uniform 6e-4;
 
 boundaryField
 {
     inlet
     {
-        type            codedFixedValue;
-        value           uniform 8.7e-5;
-        name            inletTKE;
-
-        codeInclude
-        #{
-            #include "fvCFD.H"
-        #};
-        codeOptions
-        #{
-            -I$(LIB_SRC)/finiteVolume/lnInclude \
-            -I$(LIB_SRC)/meshTools/lnInclude
-        #};
-        codeLibs
-        #{
-            -lfiniteVolume \
-            -lmeshTools
-        #};
-        code
-        #{
-            scalarField& field = *this;
-            scalar t = this->db().time().value();
-            scalar kFull = 8.7e-5;
-            forAll(field, faceI)
-            {
-                field[faceI] = (t <= 4.0)
-                    ? (t/4.0)*(t/4.0)*kFull
-                    : kFull;
-            }
-        #};
+        type            zeroGradient;
+        value           uniform 6e-4;
     }
-
     outlet
     {
         type            zeroGradient;
     }
-
-    surface
+    top
     {
         type            symmetryPlane;
     }
-
-    bottom
+    seabed
     {
-        type            kqRWallFunction;
-        value           uniform 2.5e-3;
+        type            zeroGradient;
+        value           uniform 6e-4;
     }
-
-    lateralfront
+    frontAndBack
     {
         type            empty;
     }
-
-    lateralback
+    frontAndBack
     {
         type            empty;
-    }
-
-    cylinder
-    {
-        type            kqRWallFunction;
-        value           uniform 2.5e-3;
     }
 }
 
