@@ -7,6 +7,8 @@ FoamFile
     object      pointDisplacement;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Required by dynamicMesh / movingMesh if enabled.
+// All patches fixed (zero displacement) for rigid mesh case.
 
 dimensions      [0 1 0 0 0 0 0];
 
@@ -16,28 +18,42 @@ boundaryField
 {
     inlet
     {
-        type            slip;
+        type            fixedValue;
+        value           uniform (0 0 0);
     }
 
     outlet
-    {
-        type            slip;
-    }
-
-    top
-    {
-        type            symmetryPlane;
-    }
-
-    seabed
     {
         type            fixedValue;
         value           uniform (0 0 0);
     }
 
-    frontAndBack
+    surface
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    bottom
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
     }
 }
 

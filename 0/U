@@ -67,20 +67,29 @@ boundaryField
         value           uniform (0 0 0);
     }
 
-    top
+    surface
     {
-        type            symmetryPlane;
+        type            slip;
     }
 
-    seabed
+    bottom
     {
-        type            movingWallVelocity;
-        value           uniform (0 0 0);
+        type            noSlip;
     }
 
-    frontAndBack
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            noSlip;
     }
 }
 

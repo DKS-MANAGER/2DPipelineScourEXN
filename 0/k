@@ -53,20 +53,31 @@ boundaryField
         type            zeroGradient;
     }
 
-    top
+    surface
     {
         type            symmetryPlane;
     }
 
-    seabed
+    bottom
     {
         type            kqRWallFunction;
         value           uniform 2.5e-3;
     }
 
-    frontAndBack
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            kqRWallFunction;
+        value           uniform 2.5e-3;
     }
 }
 

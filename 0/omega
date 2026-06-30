@@ -10,14 +10,14 @@ FoamFile
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 450.6;
+internalField   uniform 0.5;
 
 boundaryField
 {
     inlet
     {
         type            codedFixedValue;
-        value           uniform 450.6;
+        value           uniform 0.5;
         name            inletOmega;
 
         codeInclude
@@ -36,15 +36,19 @@ boundaryField
         #};
         code
         #{
+            const fvPatch& boundaryPatch = patch();
+            const vectorField& Cf = boundaryPatch.Cf();
             scalarField& field = *this;
-            scalar t = this->db().time().value();
-            scalar kFull  = 8.7e-5;
-            scalar omFull = 100.0*sqrt(kFull)/(0.09*0.1*0.23);
-            forAll(field, faceI)
+            forAll(Cf, faceI)
             {
-                field[faceI] = (t <= 4.0)
-                    ? (t/4.0)*omFull
-                    : omFull;
+                scalar y    = Cf[faceI].y();
+                scalar ustar = 0.04318;
+                scalar kappa = 0.41;
+                scalar z0   = 3.0e-5;
+                if (y > z0)
+                    field[faceI] = ustar / (kappa * y);
+                else
+                    field[faceI] = ustar / (kappa * z0);
             }
         #};
     }
@@ -54,21 +58,31 @@ boundaryField
         type            zeroGradient;
     }
 
-    top
+    surface
     {
         type            symmetryPlane;
     }
 
-    seabed
+    bottom
     {
         type            omegaWallFunction;
-        value           uniform 450.6;
-        kn              uniform 1.08e-3;
+        value           uniform 0.5;
     }
 
-    frontAndBack
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            omegaWallFunction;
+        value           uniform 0.5;
     }
 }
 

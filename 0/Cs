@@ -7,6 +7,8 @@ FoamFile
     object      Cs;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Suspended sediment concentration (volume fraction)
+// Initial: zero everywhere (no suspended load at t=0)
 
 dimensions      [0 0 0 0 0 0 0];
 
@@ -22,24 +24,32 @@ boundaryField
 
     outlet
     {
-        type            inletOutlet;
-        inletValue      uniform 0;
-        value           uniform 0;
+        type            zeroGradient;
     }
 
-    top
-    {
-        type            symmetryPlane;
-    }
-
-    seabed
+    surface
     {
         type            zeroGradient;
     }
 
-    frontAndBack
+    bottom
+    {
+        type            zeroGradient;
+    }
+
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            zeroGradient;
     }
 }
 

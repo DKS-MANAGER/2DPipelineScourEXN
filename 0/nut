@@ -10,7 +10,7 @@ FoamFile
 
 dimensions      [0 2 -1 0 0 0 0];
 
-internalField   uniform 1e-10;
+internalField   uniform 0;
 
 boundaryField
 {
@@ -26,20 +26,35 @@ boundaryField
         value           uniform 0;
     }
 
-    top
+    surface
     {
-        type            symmetryPlane;
-    }
-
-    seabed
-    {
-        type            nutkWallFunction;
+        type            calculated;
         value           uniform 0;
     }
 
-    frontAndBack
+    bottom
+    {
+        type            nutURoughWallFunction;
+        roughnessHeight     3.0e-5;
+        roughnessConstant   0.5;
+        roughnessFactor     1.0;
+        value           uniform 0;
+    }
+
+    lateralfront
     {
         type            empty;
+    }
+
+    lateralback
+    {
+        type            empty;
+    }
+
+    cylinder
+    {
+        type            nutkWallFunction;
+        value           uniform 0;
     }
 }
 
