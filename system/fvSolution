@@ -108,6 +108,9 @@ solvers
         relTol          0;
     }
 
+    // Cs MUST be bounded [0,1] -- PBiCGStab alone can produce negative
+    // denormals at t=0 when Cs=0 everywhere, which drives a spurious
+    // Exner displacement that collapses near-bed cells -> SIGFPE.
     Cs
     {
         solver          PBiCGStab;
@@ -115,6 +118,9 @@ solvers
         tolerance       1e-10;
         relTol          0;
         minIter         1;
+        maxIter         100;
+        minValue        0;
+        maxValue        1;
     }
 
     CsFinal
@@ -124,10 +130,11 @@ solvers
         tolerance       1e-10;
         relTol          0;
         minIter         1;
+        maxIter         100;
+        minValue        0;
+        maxValue        1;
     }
 
-    // displacementPointSmoothing solves for the POINT displacement field.
-    // Without this entry the solver falls back to an untuned default.
     pointDisplacement
     {
         solver          GAMG;
@@ -197,6 +204,12 @@ PIMPLE
     pRefValue               0;
     morphologicalUpdate     yes;
     morphoFrequency         1;
+
+    // Delay bed morphology until flow and Cs have spun up.
+    // At t=0 Cs=0 everywhere; the first Exner step would use garbage
+    // near-zero Cs values -> large spurious zb displacement -> cell collapse.
+    // 4 s gives ~40 flow-through times for the inlet profile to develop.
+    morphoStartTime         4.0;
 
     residualControl
     {
