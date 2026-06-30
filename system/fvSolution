@@ -5,11 +5,6 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// Solvers matched to baseline DKS-MANAGER/2DPipelineScour/system/fvSolution:
-//   p_rgh      : GAMG + DIC smoother     (baseline: same for p_rbgh)
-//   U/k/omega  : PBiCGStab + DILU        (baseline: PBiCG + DILU)
-//   PIMPLE     : nCorrectors=2, nNonOrth=1 (exact baseline match)
-//   pRefPoint  : (0.9999 0.2049 0.0)     (exact baseline match)
 FoamFile
 {
     version     2.0;
@@ -32,7 +27,11 @@ solvers
         agglomerator    faceAreaPair;
         mergeLevels     1;
     }
-    cellDisplacementFinal { $cellDisplacement; relTol 0; }
+    cellDisplacementFinal
+    {
+        $cellDisplacement;
+        relTol          0;
+    }
 
     p_rgh
     {
@@ -48,7 +47,12 @@ solvers
         agglomerator    faceAreaPair;
         mergeLevels     1;
     }
-    p_rghFinal { $p_rgh; tolerance 1e-6; relTol 0; }
+    p_rghFinal
+    {
+        $p_rgh;
+        tolerance       1e-6;
+        relTol          0;
+    }
 
     pcorr
     {
@@ -64,16 +68,38 @@ solvers
         tolerance       1e-6;
         relTol          0;
     }
-    UFinal { $U; relTol 0; }
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
 
-    "(k|omega)"
+    // k and omega expanded separately - $"regex" not valid in v2412
+    k
     {
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-9;
         relTol          0;
     }
-    "(k|omega)Final" { $"(k|omega)"; relTol 0; }
+    kFinal
+    {
+        $k;
+        relTol          0;
+    }
+
+    omega
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-9;
+        relTol          0;
+    }
+    omegaFinal
+    {
+        $omega;
+        relTol          0;
+    }
 
     Cs
     {
@@ -82,7 +108,11 @@ solvers
         tolerance       1e-9;
         relTol          0;
     }
-    CsFinal { $Cs; relTol 0; }
+    CsFinal
+    {
+        $Cs;
+        relTol          0;
+    }
 
     h
     {
@@ -91,7 +121,11 @@ solvers
         tolerance       1e-9;
         relTol          0;
     }
-    hFinal { $h; relTol 0; }
+    hFinal
+    {
+        $h;
+        relTol          0;
+    }
 }
 
 PIMPLE
