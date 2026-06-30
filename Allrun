@@ -1,81 +1,33 @@
 #!/bin/sh
-cd "${0%/*}" || exit 1
+#------------------------------------------------------------------------------
+# Allrun - sedExnerFoam 2D pipeline scour
+# Baseline : DKS-MANAGER/2DPipelineScour      (sedFoam Euler-Euler two-phase)
+# This case: DKS-MANAGER/2DPipelineScourEXN   (sedExnerFoam moving mesh)
+#
+# WORKFLOW (Option A - generate fresh mesh):
+#   1. blockMesh        - 3-block background mesh (578x80 cells)
+#   2. snappyHexMesh    - carve cylinder D=0.05m, gap e/D=0.02
+#   3. checkMesh        - verify 7 patches, non-ortho < 70
+#   4. makeFaMesh       - finite-area mesh on 'bottom' patch (Exner)
+#   5. restore 0_org    - initial conditions
+#   6. sedExnerFoam     - run solver to t=45s
+#
+# WORKFLOW (Option B - use baseline polyMesh directly, RECOMMENDED):
+#   cp -r /path/to/2DPipelineScour/constant/polyMesh constant/polyMesh
+#   makeFaMesh
+#   cp -r 0_org/. 0/
+#   sedExnerFoam 2>&1 | tee log.sedExnerFoam
+#------------------------------------------------------------------------------
+cd ${0%/*} || exit 1
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
 
-# ============================================================
-# 2DPipelineScourEXN — Allrun
-# OpenFOAM v2412  |  8-core WSL laptop
-# ============================================================
+runApplication blockMesh
+runApplication snappyHexMesh -overwrite
+runApplication checkMesh
+runApplication makeFaMesh
 
-# ------------------------------------------------------------
-# 1. Clean and generate background hex mesh
-# ------------------------------------------------------------
-foamCleanPolyMesh
-blockMesh 2>&1 | tee log.blockMesh
+cp -r 0_org/. 0/
 
-# ------------------------------------------------------------
-# 2. Protect empty patches before snappy overwrites boundary
-#    snappyHexMesh -overwrite replaces constant/polyMesh;
-#    the sed trick renames 'empty' -> 'emptyy' so snappy does
-#    not touch those patches, then restores them afterwards.
-# ------------------------------------------------------------
-sed -i -e 's/\btype\s*empty;/type emptyy;/g' constant/polyMesh/boundary
+runApplication sedExnerFoam
 
-# ------------------------------------------------------------
-# 3. Run snappyHexMesh in PARALLEL on 8 cores
-#    decomposePar on background blockMesh first, then snappy
-#    overwrites each processor*/constant/polyMesh in parallel.
-# ------------------------------------------------------------
-decomposePar 2>&1 | tee log.decomposePar_snappy
-mpirun -np 8 snappyHexMesh -overwrite -parallel 2>&1 | tee log.snappyHexMesh
-
-# Reconstruct the snappy mesh back to constant/polyMesh
-reconstructParMesh -constant 2>&1 | tee log.reconstructParMesh
-
-# Restore empty patch type
-sed -i -e 's/\btype\s*emptyy;/type empty;/g' constant/polyMesh/boundary
-
-# ------------------------------------------------------------
-# 4. Extrude to single-cell 2D domain
-# ------------------------------------------------------------
-extrudeMesh 2>&1 | tee log.extrudeMesh
-
-# ------------------------------------------------------------
-# 5. Verify mesh quality — abort if mesh is bad
-# ------------------------------------------------------------
-checkMesh 2>&1 | tee log.checkMesh
-if grep -q 'FOAM exiting' log.checkMesh; then
-    echo "ERROR: checkMesh failed. Fix mesh before running solver."
-    exit 1
-fi
-
-# ------------------------------------------------------------
-# 6. Copy initial conditions
-# ------------------------------------------------------------
-cp -r 0_org 0
-
-# ------------------------------------------------------------
-# 7. Build finite-area mesh on the seabed patch
-#    MUST run on the serial (reconstructed) constant/polyMesh.
-#    sedExnerFoam reads constant/faMesh/ to solve the Exner
-#    bed-elevation equation on the 2D finite-area surface.
-#    Run BEFORE decomposePar so faMesh is in constant/ and
-#    visible to all processors via the shared constant/ dir.
-# ------------------------------------------------------------
-makeFaMesh 2>&1 | tee log.makeFaMesh
-if grep -q 'FOAM exiting' log.makeFaMesh; then
-    echo "ERROR: makeFaMesh failed. Check seabed patch name in constant/polyMesh/boundary."
-    exit 1
-fi
-
-# ------------------------------------------------------------
-# 8. Decompose final mesh for parallel solver run
-# ------------------------------------------------------------
-decomposePar 2>&1 | tee log.decomposePar_solver
-
-# ------------------------------------------------------------
-# 9. Run sedExnerFoam in parallel on 8 cores
-#    sedExnerFoam: morphodynamic Exner scour solver
-# ------------------------------------------------------------
-mpirun -np 8 sedExnerFoam -parallel 2>&1 | tee log.sedExnerFoam
-
-# ============================================================
+#------------------------------------------------------------------------------

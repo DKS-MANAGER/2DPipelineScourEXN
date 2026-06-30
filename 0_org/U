@@ -3,116 +3,63 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volVectorField;
-    location    "0";
+    location    "0_org";
     object      U;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// EXTRACTED from DKS-MANAGER/2DPipelineScour/0_org/U.b
+// Log-law inlet: ustar=0.04318 m/s, kappa=0.41, z0=3e-5 m
+// U = (ustar/kappa) * ln((y - ybed)/z0 + 1)
+// At y=0.1m (mid-depth): U ~ 0.35 m/s
 
 dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform (0 0 0);
+internalField   uniform (0.35 0 0);
 
 boundaryField
 {
     inlet
     {
-        // Log-law inlet velocity profile -- preserved exactly from SedFoam U.b.
-        // u* = 0.04318 m/s, kappa = 0.41, z0 = 3e-5 m (roughness length)
-        //
-        // COORDINATE NOTE:
-        //   Cf[faceI].y() returns the ABSOLUTE mesh y-coordinate of each face
-        //   centre. The bed is at y = -0.025 m (preserved SedFoam system).
-        //   The height above the bed is therefore:
-        //     h = Cf[faceI].y() - (-0.025) = Cf[faceI].y() + 0.025
-        //   However the log-law is applied as log(y/z0) where y = Cf[faceI].y().
-        //   This is correct ONLY because z0 = 3e-5 m << 0.025 m, so the
-        //   -0.025 offset is absorbed into the z0 reference height with
-        //   negligible error across the water column (max 0.4% at y=-0.024).
-        //   The code is physically correct as written -- no change needed.
-        //
-        // 4-second linear ramp-up preserved -- essential to avoid a pressure
-        // spike at t=0 when the mesh is stationary and momentum equation
-        // has not yet developed the boundary layer.
         type            codedFixedValue;
         value           uniform (0 0 0);
-        name            inletLogLaw;
-
-        codeInclude
-        #{
-            #include "fvCFD.H"
-        #};
-        codeOptions
-        #{
-            -I$(LIB_SRC)/finiteVolume/lnInclude \
-            -I$(LIB_SRC)/meshTools/lnInclude
-        #};
-        codeLibs
-        #{
-            -lfiniteVolume \
-            -lmeshTools
-        #};
+        name            logLawInletU;
         code
         #{
-            const fvPatch& boundaryPatch = patch();
-            const vectorField& Cf = boundaryPatch.Cf();
-            vectorField& field = *this;
-            scalar t = this->db().time().value();
-            forAll(Cf, faceI)
-            {
-                // Absolute mesh y-coordinate.
-                // Range: -0.025 (bed) to +0.205 (free surface).
-                scalar y    = Cf[faceI].y();
-                scalar z0   = 3.0e-5;       // roughness length [m]
-                scalar ustar = 0.04318;     // friction velocity [m/s]
-                scalar kappa = 0.41;        // von Karman constant
+            const scalar ustar = 0.04318;
+            const scalar kappa = 0.41;
+            const scalar z0    = 3.0e-5;
+            const scalar ybed  = 0.0;    // bed level at t=0
 
-                if (y > z0)
-                {
-                    scalar Umag = (ustar/kappa) * log(y/z0);
-                    scalar ramp = (t <= 4.0) ? (0.1 + 0.9*(t/4.0)) : 1.0;
-                    field[faceI] = vector(ramp * Umag, 0, 0);
-                }
-                else
-                {
-                    field[faceI] = vector(0, 0, 0);
-                }
+            const fvPatch& p = this->patch();
+            const vectorField& Cf = p.Cf();
+            vectorField& U = *this;
+
+            forAll(Cf, facei)
+            {
+                scalar y = Cf[facei].y() - ybed;
+                scalar Umag = (y > z0)
+                    ? (ustar/kappa)*Foam::log(y/z0)
+                    : 0.0;
+                U[facei] = vector(max(Umag, 0.0), 0, 0);
             }
         #};
     }
-
     outlet
     {
-        type            inletOutlet;
-        inletValue      uniform (0 0 0);
-        value           uniform (0 0 0);
+        type            zeroGradient;
     }
-
-    seabed
+    surface
     {
-        // movingWallVelocity: enforces no-slip on a deforming patch by
-        // subtracting the mesh velocity from the boundary condition.
-        // MANDATORY for the seabed patch -- plain noSlip would impose
-        // U=0 in the lab frame, not the mesh frame, causing a non-zero
-        // relative velocity at the bed during active scour.
-        type            movingWallVelocity;
-        value           uniform (0 0 0);
+        type            slip;
     }
-
-    cylinder
+    bottom
     {
-        // Cylinder never deforms -- noSlip is correct and more robust
-        // than movingWallVelocity for a static patch.
         type            noSlip;
     }
-
-    top
+    lateralfront { type empty; }
+    lateralback  { type empty; }
+    cylinder
     {
-        type            symmetryPlane;
-    }
-
-    frontAndBack
-    {
-        type            empty;
+        type            noSlip;
     }
 }
 

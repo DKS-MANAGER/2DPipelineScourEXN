@@ -1,3 +1,17 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// Schemes matched to baseline DKS-MANAGER/2DPipelineScour/system/fvSchemes:
+//   ddtSchemes   : Euler          (baseline: Euler)
+//   grad(U/k/w)  : cellLimited    (baseline: cellLimited Gauss linear 1)
+//   div(phi,U)   : linearUpwind   (baseline: linearUpwind for U.b)
+//   div(phi,k/w) : linearUpwind   (baseline: linearUpwind for k.b,omega.b)
+//   laplacian    : corrected      (baseline: corrected)
+//   fluxRequired : p_rgh          (replaces baseline p_rbgh)
 FoamFile
 {
     version     2.0;
@@ -6,7 +20,6 @@ FoamFile
     location    "system";
     object      fvSchemes;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 ddtSchemes
 {
@@ -15,35 +28,31 @@ ddtSchemes
 
 gradSchemes
 {
-    default         Gauss linear;
-    grad(k)         cellLimited Gauss linear 1;
-    grad(omega)     cellLimited Gauss linear 1;
-    grad(U)         cellLimited Gauss linear 1;
+    default             Gauss linear;
+    grad(U)             cellLimited Gauss linear 1;
+    grad(k)             cellLimited Gauss linear 1;
+    grad(omega)         cellLimited Gauss linear 1;
 }
 
 divSchemes
 {
-    div((nuEff*dev2(T(grad(U)))))  Gauss linear;
-
-    div(phi,U)          Gauss linearUpwind grad(U);
-
-    div(phi,k)          Gauss linearUpwind grad(k);
-    div(phi,omega)      Gauss linearUpwind grad(omega);
-
-    // vanLeer is a TVD scheme: strictly bounded [0,1] by construction.
-    // linearUpwind is unbounded and produces Min(Cs) = -3e-320 denormals
-    // at t=0 when Cs=0 everywhere, which corrupts the Exner bedload flux.
-    div(phi,Cs)         Gauss vanLeer;
-    div(phip,Cs)        Gauss vanLeer;
-    div(phi,Ws)         Gauss vanLeer;
-    div(phip,Ws)        Gauss vanLeer;
-
-    default         none;
+    default                              none;
+    div(phi,U)                           Gauss linearUpwind grad(U);
+    div(phi,k)                           Gauss linearUpwind grad(k);
+    div(phi,omega)                       Gauss linearUpwind grad(omega);
+    div(phi,Cs)                          Gauss linearUpwind grad(Cs);
+    div((nuEff*dev(T(grad(U)))))         Gauss linear;
+    div((nuEff*dev2(T(grad(U)))))        Gauss linear;
 }
 
 laplacianSchemes
 {
-    default         Gauss linear corrected;
+    default                                  Gauss linear corrected;
+    laplacian(nuEff,U)                       Gauss linear corrected;
+    laplacian((1|A(U)),p_rgh)               Gauss linear corrected;
+    laplacian(DkEff,k)                       Gauss linear corrected;
+    laplacian(DomegaEff,omega)               Gauss linear corrected;
+    laplacian(diffusivity,cellDisplacement)  Gauss linear corrected;
 }
 
 interpolationSchemes
@@ -58,13 +67,9 @@ snGradSchemes
 
 fluxRequired
 {
-    default         no;
-    p               ;
-}
-
-wallDist
-{
-    method meshWave;
+    default     no;
+    p_rgh       ;
+    pcorr       ;
 }
 
 // ************************************************************************* //

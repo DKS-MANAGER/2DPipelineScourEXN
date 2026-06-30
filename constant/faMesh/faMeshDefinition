@@ -1,0 +1,50 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// Finite-area mesh built on the 'bottom' patch of the 3D polyMesh.
+// Provides the 1D (streamwise x) surface on which the Exner equation
+// is solved: h(x,t) bed height, qs(x,t) bedload flux.
+//
+// Run 'makeFaMesh' after snappyHexMesh to generate this mesh.
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant/faMesh";
+    object      faMeshDefinition;
+}
+
+method          patch;
+
+patchNames      ( bottom );
+
+boundary
+{
+    inlet_bottom
+    {
+        type                patch;
+        ownerPolyPatch      inlet;
+        neighbourPolyPatch  inlet;
+    }
+
+    outlet_bottom
+    {
+        type                patch;
+        ownerPolyPatch      outlet;
+        neighbourPolyPatch  outlet;
+    }
+
+    lateral_bottom
+    {
+        type                empty;
+        ownerPolyPatch      lateralfront;
+        neighbourPolyPatch  lateralback;
+    }
+}
+
+// ************************************************************************* //

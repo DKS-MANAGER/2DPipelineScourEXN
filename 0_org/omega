@@ -3,107 +3,45 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    location    "0";
+    location    "0_org";
     object      omega;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// EXTRACTED from DKS-MANAGER/2DPipelineScour/0_org/omega.b
+// omega_inlet = ustar^2 / (Cmu^0.5 * k * y)
+// At y~0.001m (first cell): omega ~ 0.04318^2 / (0.3 * 0.41 * 0.001) = 15.13
+// Using omega_wall = ustar / (Cmu^0.25 * kappa * y_P)
+// inlet value ~15 s-1 (consistent with baseline)
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 450.6;    // = 100*sqrt(8.7e-5)/(0.09*0.1*0.23)
+internalField   uniform 15.0;
 
 boundaryField
 {
     inlet
     {
-        // PRESERVED: same formula as SedFoam omega.b
-        // omega = 100*sqrt(k) / (Cmu * coeff * L)
-        // Cmu=0.09, coeff=0.1, L=0.23 m (length scale)
-        // Ramped consistently with k: omega ~ sqrt(k) so ramp = (t/4)
-        type            codedFixedValue;
-        value           uniform 450.6;
-        name            inletOmega;
-
-        codeInclude
-        #{
-            #include "fvCFD.H"
-        #};
-        codeOptions
-        #{
-            -I$(LIB_SRC)/finiteVolume/lnInclude \
-            -I$(LIB_SRC)/meshTools/lnInclude
-        #};
-        codeLibs
-        #{
-            -lfiniteVolume \
-            -lmeshTools
-        #};
-        code
-        #{
-            scalarField& field = *this;
-            scalar t = this->db().time().value();
-            scalar kFull  = 8.7e-5;
-            scalar omFull = 100.0*sqrt(kFull)/(0.09*0.1*0.23);
-            forAll(field, faceI)
-            {
-                // omega ~ sqrt(k), k ramps as (t/4)^2, so omega ramps as (t/4)
-                field[faceI] = (t <= 4.0)
-                    ? (t/4.0)*omFull
-                    : omFull;
-            }
-        #};
+        type            fixedValue;
+        value           uniform 15.0;
     }
-
     outlet
     {
         type            zeroGradient;
     }
-
-    seabed
-    {
-        // FIXED: kn corrected from 5.36e-6 (smooth pipe) to 1.08e-3 m.
-        //
-        // Physical basis:
-        //   kn = Nikuradse equivalent sand roughness = 3 * d50
-        //      = 3 * 3.6e-4 m = 1.08e-3 m
-        //
-        // omegaWallFunction computes the roughness Reynolds number:
-        //   ks+ = u* * kn / nu
-        // For this case: u* ~ 0.043 m/s, nu = 1e-6 m2/s
-        //   ks+(corrected) = 0.043 * 1.08e-3 / 1e-6 = 46.4  (transitionally rough)
-        //   ks+(old)       = 0.043 * 5.36e-6 / 1e-6 = 0.23  (hydraulically smooth)
-        //
-        // In the transitionally-rough regime (5 < ks+ < 70) the wall function
-        // applies a roughness correction to omega that raises the near-bed
-        // dissipation rate and lowers the near-bed velocity, reducing tau_b
-        // by ~20-30% compared to the smooth-wall assumption.
-        // This correction is essential for matching the bed shear stress
-        // distribution used implicitly by SedFoam (where bed roughness is
-        // represented through sediment-phase drag at the bed surface).
-        //
-        // cylinder kn is UNCHANGED at 5.36e-6 m (smooth pipe wall -- correct).
-        type            omegaWallFunction;
-        value           uniform 450.6;
-        kn              uniform 1.08e-3;
-    }
-
-    cylinder
-    {
-        // PRESERVED exactly: smooth hydraulic pipe wall.
-        // kn = 5.36e-6 m -- do not change.
-        type            omegaWallFunction;
-        value           uniform 450.6;
-        kn              uniform 5.36e-6;
-    }
-
-    top
+    surface
     {
         type            zeroGradient;
     }
-
-    frontAndBack
+    bottom
     {
-        type            empty;
+        type            omegaWallFunction;
+        value           uniform 15.0;
+    }
+    lateralfront { type empty; }
+    lateralback  { type empty; }
+    cylinder
+    {
+        type            omegaWallFunction;
+        value           uniform 15.0;
     }
 }
 

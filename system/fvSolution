@@ -1,3 +1,15 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// Solvers matched to baseline DKS-MANAGER/2DPipelineScour/system/fvSolution:
+//   p_rgh      : GAMG + DIC smoother     (baseline: same for p_rbgh)
+//   U/k/omega  : PBiCGStab + DILU        (baseline: PBiCG + DILU)
+//   PIMPLE     : nCorrectors=2, nNonOrth=1 (exact baseline match)
+//   pRefPoint  : (0.9999 0.2049 0.0)     (exact baseline match)
 FoamFile
 {
     version     2.0;
@@ -6,66 +18,43 @@ FoamFile
     location    "system";
     object      fvSolution;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 solvers
 {
+    cellDisplacement
+    {
+        solver          GAMG;
+        tolerance       1e-5;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+    cellDisplacementFinal { $cellDisplacement; relTol 0; }
+
+    p_rgh
+    {
+        solver          GAMG;
+        tolerance       1e-6;
+        relTol          0.0001;
+        smoother        DIC;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+    p_rghFinal { $p_rgh; tolerance 1e-6; relTol 0; }
+
     pcorr
     {
-        solver              GAMG;
-        tolerance           1e-6;
-        relTol              0;
-        smoother            DIC;
-        nPreSweeps          0;
-        nPostSweeps         2;
-        cacheAgglomeration  true;
-        nCellsInCoarsestLevel 10;
-        agglomerator        faceAreaPair;
-        mergeLevels         1;
-    }
-
-    pcorrFinal
-    {
-        solver              GAMG;
-        tolerance           1e-6;
-        relTol              0;
-        smoother            DIC;
-        nPreSweeps          0;
-        nPostSweeps         2;
-        cacheAgglomeration  true;
-        nCellsInCoarsestLevel 10;
-        agglomerator        faceAreaPair;
-        mergeLevels         1;
-    }
-
-    p
-    {
-        solver              GAMG;
-        tolerance           1e-6;
-        relTol              1e-4;
-        smoother            DIC;
-        nPreSweeps          0;
-        nPostSweeps         2;
-        nFinestSweeps       2;
-        cacheAgglomeration  true;
-        nCellsInCoarsestLevel 10;
-        agglomerator        faceAreaPair;
-        mergeLevels         1;
-    }
-
-    pFinal
-    {
-        solver              GAMG;
-        tolerance           1e-6;
-        relTol              0;
-        smoother            DIC;
-        nPreSweeps          0;
-        nPostSweeps         2;
-        nFinestSweeps       2;
-        cacheAgglomeration  true;
-        nCellsInCoarsestLevel 10;
-        agglomerator        faceAreaPair;
-        mergeLevels         1;
+        $p_rgh;
+        tolerance       1e-4;
+        relTol          0;
     }
 
     U
@@ -73,165 +62,46 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-6;
-        relTol          0.01;
-    }
-
-    UFinal
-    {
-        solver          PBiCGStab;
-        preconditioner  DILU;
-        tolerance       1e-6;
         relTol          0;
     }
+    UFinal { $U; relTol 0; }
 
     "(k|omega)"
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-8;
-        relTol          0.01;
-    }
-
-    kFinal
-    {
-        solver          PBiCGStab;
-        preconditioner  DILU;
-        tolerance       1e-8;
+        tolerance       1e-9;
         relTol          0;
     }
-
-    omegaFinal
-    {
-        solver          PBiCGStab;
-        preconditioner  DILU;
-        tolerance       1e-8;
-        relTol          0;
-    }
+    "(k|omega)Final" { $"(k|omega)"; relTol 0; }
 
     Cs
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-10;
+        tolerance       1e-9;
         relTol          0;
-        minIter         1;
-        maxIter         100;
     }
+    CsFinal { $Cs; relTol 0; }
 
-    CsFinal
+    h
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-10;
+        tolerance       1e-9;
         relTol          0;
-        minIter         1;
-        maxIter         100;
     }
-
-    pointDisplacement
-    {
-        solver          GAMG;
-        tolerance       1e-8;
-        relTol          0;
-        smoother        GaussSeidel;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
-
-    pointDisplacementFinal
-    {
-        solver          GAMG;
-        tolerance       1e-8;
-        relTol          0;
-        smoother        GaussSeidel;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
-
-    cellDisplacement
-    {
-        solver          GAMG;
-        tolerance       1e-8;
-        relTol          0;
-        smoother        GaussSeidel;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
-
-    cellDisplacementFinal
-    {
-        solver          GAMG;
-        tolerance       1e-8;
-        relTol          0;
-        smoother        GaussSeidel;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
-}
-
-relaxationFactors
-{
-    equations
-    {
-        U               0.9;
-        k               0.7;
-        omega           0.7;
-        Cs              0.9;
-    }
+    hFinal { $h; relTol 0; }
 }
 
 PIMPLE
 {
-    nOuterCorrectors        2;
-    nCorrectors             2;
+    nCorrectors              2;
     nNonOrthogonalCorrectors 1;
-    pRefCell                0;
-    pRefValue               0;
-
-    // SPIN-UP MODE: morphology OFF.
-    // morphoStartTime is NOT implemented in the sedExnerFoam source --
-    // it is silently ignored. The only working gate is this keyword.
-    // Workflow:
-    //   1. Run to t~4s with morphologicalUpdate no  (flow + Cs develop)
-    //   2. Stop, set morphologicalUpdate yes, restart from latest time
-    morphologicalUpdate     no;
-    morphoFrequency         1;
-
-    residualControl
-    {
-        U
-        {
-            tolerance   1e-4;
-            relTol      0;
-        }
-        p
-        {
-            tolerance   1e-4;
-            relTol      0;
-        }
-    }
-}
-
-faSolution
-{
-    solvers
-    {
-        zb
-        {
-            solver          PCG;
-            preconditioner  DIC;
-            tolerance       1e-10;
-            relTol          0;
-        }
-    }
+    pRefPoint                (0.9999 0.2049 0.0);
+    pRefValue                0;
+    correctPhi               yes;
+    moveMeshOuterCorrectors  yes;
 }
 
 // ************************************************************************* //

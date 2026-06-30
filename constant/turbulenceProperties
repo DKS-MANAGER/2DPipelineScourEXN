@@ -1,10 +1,12 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// EXTRACTED from DKS-MANAGER/2DPipelineScour/constant/turbulenceProperties.b
+// Baseline fluid phase used k-omega SST -> replicated for single-phase.
 FoamFile
 {
     version     2.0;
@@ -13,44 +15,14 @@ FoamFile
     location    "constant";
     object      turbulenceProperties;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 simulationType  RAS;
 
 RAS
 {
-    // CHANGED from twophasekOmega (SedFoam-specific two-phase model)
-    // to kOmegaSST (standard OpenFOAM single-phase model).
-    //
-    // Justification for kOmegaSST over plain kOmega:
-    // SST blends k-omega near walls with k-epsilon in freestream.
-    // This is critical for pipeline scour where you have:
-    //   - Wall-bounded flow at seabed (k-omega behaviour needed)
-    //   - Free shear layer in the wake of the cylinder (k-epsilon behaviour needed)
-    // Plain kOmega overpredicts wake length; kOmegaSST handles it correctly.
-    RASModel        kOmegaSST;
-
-    turbulence      on;
-    printCoeffs     on;
-
-    // kOmegaSSTCoeffs — using 2006 Wilcox values to match SedFoam as closely
-    // as possible. SedFoam twophasekOmega already uses 2006 coefficients.
-    kOmegaSSTCoeffs
-    {
-        alphaK1         0.85;
-        alphaK2         1.0;
-        alphaOmega1     0.5;
-        alphaOmega2     0.856;
-        beta1           0.075;
-        beta2           0.0828;
-        betaStar        0.09;       // = Cmu from SedFoam (0.09) — preserved
-        gamma1          0.5532;
-        gamma2          0.4403;
-        a1              0.31;
-        b1              1.0;
-        c1              10.0;
-        F3              no;
-    }
+    RASModel    kOmegaSST;
+    turbulence  on;
+    printCoeffs on;
 }
 
 // ************************************************************************* //

@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       areaScalarField;
+    location    "0_org/finite-area";
+    object      h;
+}
+// Exner bed height on faMesh (finite-area, 'bottom' patch).
+// h = 0 : initial flat bed at y=0
+// h < 0 : scour (bed moved downward)
+// h > 0 : deposition
+// Matches baseline 'delta' field in DKS-MANAGER/2DPipelineScour/0_org/
+
+dimensions      [0 1 0 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet_bottom
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    outlet_bottom
+    {
+        type            zeroGradient;
+    }
+    lateral_bottom
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

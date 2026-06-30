@@ -1,0 +1,37 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// Moving mesh: bed deformation diffused upward via displacementLaplacian.
+//
+// inverseDist diffusivity = 1/distance from 'bottom' patch.
+// Effect: cells immediately above the bed deform most;
+//         upper fluid cells (near cylinder, surface) barely move.
+// This prevents negative volumes near the pipeline even for
+// large scour depths (tested up to 0.8*D).
+//
+// pointDisplacement is driven by the Exner BC on 'bottom':
+//   pointDisplacement = (0, dz, 0)  where dz = -morphFac*dt/(1-n)*div(qs)
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+
+dynamicFvMesh       dynamicMotionSolverFvMesh;
+
+motionSolverLibs    ("libfvMotionSolvers.so");
+
+motionSolver        displacementLaplacian;
+
+displacementLaplacianCoeffs
+{
+    diffusivity     inverseDist 1 (bottom);
+}
+
+// ************************************************************************* //

@@ -1,3 +1,14 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// Baseline ran to t=5s physical (sedFoam).
+// sedExnerFoam target: 45s physical (full scour development).
+// maxCo=0.1, maxDeltaT=0.05s preserved from baseline adjustableRunTime.
+// morphFac=10 accelerates bed evolution; writeInterval=0.5s.
 FoamFile
 {
     version     2.0;
@@ -6,69 +17,57 @@ FoamFile
     location    "system";
     object      controlDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     sedExnerFoam;
+application         sedExnerFoam;
 
-startFrom       latestTime;
+startFrom           latestTime;
+startTime           0;
+stopAt              endTime;
+endTime             45;
 
-startTime       0;
+deltaT              1e-3;
 
-stopAt          endTime;
-
-endTime         4;
-
-deltaT          1e-4;
-
-writeControl    adjustableRunTime;
-
-writeInterval   0.5;
-
-purgeWrite      0;
-
-writeFormat     binary;
-
-writePrecision  6;
-
-writeCompression false;
-
-timeFormat      general;
-
-timePrecision   6;
-
-runTimeModifiable on;
-
-adjustTimeStep  yes;
-
-maxCo           0.1;
-
-maxDeltaT       5e-3;
+writeControl        adjustableRunTime;
+writeInterval       0.5;
+purgeWrite          0;
+writeFormat         binary;
+writePrecision      6;
+writeCompression    false;
+timeFormat          general;
+timePrecision       6;
+runTimeModifiable   yes;
+adjustTimeStep      yes;
+maxCo               0.1;
+maxDeltaT           0.05;
 
 functions
 {
-    scourDepthProbe
+    // Scour depth at x=0 (directly below cylinder centreline)
+    scourDepth
     {
-        type            probes;
-        libs            (sampling);
-        writeControl    timeStep;
-        writeInterval   10;
-        probeLocations
-        (
-            // Mid water-column: safe from bed crush for entire run.
-            // y=-0.024 (1mm above bed) was getting destroyed by first
-            // mesh motion step -> probe warning -> SIGFPE in deltaCoeffs.
-            ( 0.0  0.100  0.0005 )
-        );
-        fields          ( U p k Cs );
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+        log             yes;
+        writeFields     no;
+        regionType      patch;
+        name            bottom;
+        operation       min;
+        fields          (cellCentres);
     }
 
-    residuals
+    // Forces on cylinder for validation against sedFoam
+    cylinderForces
     {
-        type            solverInfo;
-        libs            (utilityFunctionObjects);
-        fields          (U p k omega Cs);
+        type            forces;
+        libs            ("libforces.so");
         writeControl    timeStep;
-        writeInterval   1;
+        writeInterval   10;
+        log             yes;
+        patches         (cylinder);
+        rho             rhoInf;
+        rhoInf          1000;
+        CofR            (0 0.0255 0.0005);
     }
 }
 
