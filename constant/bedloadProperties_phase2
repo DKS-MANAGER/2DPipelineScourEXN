@@ -5,20 +5,12 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// ROOT CAUSE FIX (SIGFPE at Time=0.001):
-// ABorder 1 (Adams-Bashforth order 1) requires dVsed.oldTime() at step 2.
-// In a 2D extruded mesh the projectedFaMesh contains faces whose projected
-// area SfProj is computed in the horizontal (x-z) plane. For the single-cell
-// thick (empty) direction the FA face areas collapse toward zero, making
-// 1/SfProj -> Inf -> SIGFPE inside the exnerEqn AB1 stencil.
-//
-// Fix 1: ABorder 0 (Euler explicit) — no old-time stencil, no division issue.
-// Fix 2: bedMotion off during hydrodynamic spin-up (0 -> 2 s).
-//        Once flow is developed run Phase 2 with bedMotion on.
-//
-// Official tutorial (SedFoam/sedExnerFoam) also uses bedMotion off + ABorder 1
-// with a pre-converged flow restart. We use ABorder 0 which is unconditionally
-// stable for the first run.
+// PHASE 2 bedloadProperties — copy over constant/bedloadProperties
+// AFTER spin-up (t=2s) completes successfully.
+// Usage:
+//   cp constant/bedloadProperties_phase2 constant/bedloadProperties
+//   # edit system/controlDict: startFrom latestTime, endTime 45
+//   sedExnerFoam 2>&1 | tee log.sedExnerFoam_phase2
 FoamFile
 {
     version     2.0;
@@ -33,13 +25,12 @@ FoamFile
 sedimentBed             on;
 sedimentBedPatches      (seabed);
 
-// PHASE 1 (spin-up 0-2s): bedMotion OFF — mesh stays fixed while flow
-// develops. Change to 'on' for Phase 2 (2-45s) restart.
-bedMotion               off;
+// PHASE 2: bed motion ON — Exner drives mesh deformation
+bedMotion               on;
 
-// Euler explicit (order 0): safe for cold start, no dVsed.oldTime() required.
-// Can switch to 1 (Adams-Bashforth) once a restart exists.
-ABorder                 0;
+// Adams-Bashforth order 1 — requires a valid restart with stored oldTime
+// fields. Safe after spin-up provides t=2s as latestTime.
+ABorder                 1;
 
 fixedFaPatches          ();
 
@@ -64,11 +55,12 @@ criticalShieldsModel
     slopeCorrection     on;
 }
 
-morphoAccFactor         1;
+// morphoAccFactor=10 accelerates bed evolution in Phase 2
+morphoAccFactor         10;
 
-filterExner             off;
+filterExner             on;
 alphaFiltExner          0.1;
-NfiltExner              1;
+NfiltExner              3;
 
 rigidBed                off;
 
