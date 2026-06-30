@@ -1,10 +1,3 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2412                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -17,17 +10,12 @@ FoamFile
 
 ddtSchemes
 {
-    // First-order implicit Euler.
-    // Sufficient for morphodynamic timescales. Switch to 'backward'
-    // (second-order) only after confirming stability.
     default         Euler;
 }
 
 gradSchemes
 {
     default         Gauss linear;
-
-    // cellLimited prevents gradient overshoots near the cylinder and bed.
     grad(k)         cellLimited Gauss linear 1;
     grad(omega)     cellLimited Gauss linear 1;
     grad(U)         cellLimited Gauss linear 1;
@@ -35,29 +23,20 @@ gradSchemes
 
 divSchemes
 {
-    // ── VISCOUS STRESS ───────────────────────────────────────────────
-    // dev2 is the correct form for incompressible kOmegaSST in v2412.
-    // The old 'dev' form (v1.x) is removed to avoid ambiguity.
     div((nuEff*dev2(T(grad(U)))))  Gauss linear;
 
-    // ── MOMENTUM ─────────────────────────────────────────────────────
-    // linearUpwind is second-order accurate and bounded — correct for
-    // recirculation zones in the cylinder wake.
     div(phi,U)          Gauss linearUpwind grad(U);
 
-    // ── TURBULENCE ───────────────────────────────────────────────────
     div(phi,k)          Gauss linearUpwind grad(k);
     div(phi,omega)      Gauss linearUpwind grad(omega);
 
-    // ── SUSPENDED SEDIMENT ───────────────────────────────────────────
-    // Cs is the dimensionless volume fraction (capital C, capital s).
-    // linearUpwind preserves second-order accuracy; upwind as fallback
-    // only if linearUpwind produces oscillations near cs=0.
-    // Never use 'linear' — it is unbounded and can produce negative Cs.
-    div(phi,Cs)           Gauss linearUpwind grad(Cs);
-    div(phip,Cs)          Gauss linearUpwind grad(Cs);
-    div(phi,Ws)           Gauss linearUpwind grad(Ws);
-    div(phip,Ws)          Gauss linearUpwind grad(Ws);
+    // vanLeer is a TVD scheme: strictly bounded [0,1] by construction.
+    // linearUpwind is unbounded and produces Min(Cs) = -3e-320 denormals
+    // at t=0 when Cs=0 everywhere, which corrupts the Exner bedload flux.
+    div(phi,Cs)         Gauss vanLeer;
+    div(phip,Cs)        Gauss vanLeer;
+    div(phi,Ws)         Gauss vanLeer;
+    div(phip,Ws)        Gauss vanLeer;
 
     default         none;
 }
