@@ -16,7 +16,13 @@ displacementPointSmoothingCoeffs
 {
     pointSmoother       laplacian;
     nPointSmootherIter  3;
-    diffusivity         inverseDistance (cylinder);
+
+    // FIXED: was inverseDistance (cylinder) but cylinder patch does not
+    // exist in this mesh. inverseDistance on a missing patch returns
+    // NaN/inf diffusivity -> corrupts deltaCoeffs -> SIGFPE in motion solver.
+    // uniform 1 = standard Laplacian smoothing, correct for a 2D domain
+    // with a single moving boundary (seabed).
+    diffusivity         uniform 1;
 }
 
 // ************************************************************************* //
