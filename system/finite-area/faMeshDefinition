@@ -7,7 +7,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-polyMeshPatches ( "seabed" );
+polyMeshPatches ( "bottom" );
 
 boundary
 {
@@ -21,10 +21,15 @@ boundary
         type patch;
         neighbourPolyPatch outlet;
     }
-    frontAndBackFa
+    lateralfrontFa
     {
         type empty;
-        neighbourPolyPatch frontAndBack;
+        neighbourPolyPatch lateralfront;
+    }
+    lateralbackFa
+    {
+        type empty;
+        neighbourPolyPatch lateralback;
     }
 }
 
