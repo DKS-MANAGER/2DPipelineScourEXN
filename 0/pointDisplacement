@@ -14,18 +14,6 @@ internalField   uniform (0 0 0);
 
 boundaryField
 {
-    seabed
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-
-    cylinder
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-
     inlet
     {
         type            slip;
@@ -38,7 +26,13 @@ boundaryField
 
     top
     {
-        type            slip;
+        type            symmetryPlane;
+    }
+
+    seabed
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
     }
 
     frontAndBack

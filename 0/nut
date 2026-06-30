@@ -4,26 +4,25 @@ FoamFile
     format      ascii;
     class       volScalarField;
     location    "0";
-    object      Cs;
+    object      nut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 0 0 0 0];
+dimensions      [0 2 -1 0 0 0 0];
 
-internalField   uniform 0;
+internalField   uniform 1e-10;
 
 boundaryField
 {
     inlet
     {
-        type            fixedValue;
+        type            calculated;
         value           uniform 0;
     }
 
     outlet
     {
-        type            inletOutlet;
-        inletValue      uniform 0;
+        type            calculated;
         value           uniform 0;
     }
 
@@ -34,7 +33,8 @@ boundaryField
 
     seabed
     {
-        type            zeroGradient;
+        type            nutkWallFunction;
+        value           uniform 0;
     }
 
     frontAndBack

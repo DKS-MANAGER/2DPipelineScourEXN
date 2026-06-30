@@ -1,0 +1,73 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 8.7e-5;
+
+boundaryField
+{
+    inlet
+    {
+        type            codedFixedValue;
+        value           uniform 8.7e-5;
+        name            inletTKE;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            scalarField& field = *this;
+            scalar t = this->db().time().value();
+            scalar kFull = 8.7e-5;
+            forAll(field, faceI)
+            {
+                field[faceI] = (t <= 4.0)
+                    ? (t/4.0)*(t/4.0)*kFull
+                    : kFull;
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    top
+    {
+        type            symmetryPlane;
+    }
+
+    seabed
+    {
+        type            kqRWallFunction;
+        value           uniform 2.5e-3;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

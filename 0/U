@@ -1,0 +1,87 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        type            codedFixedValue;
+        value           uniform (0 0 0);
+        name            inletLogLaw;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            const fvPatch& boundaryPatch = patch();
+            const vectorField& Cf = boundaryPatch.Cf();
+            vectorField& field = *this;
+            scalar t = this->db().time().value();
+            forAll(Cf, faceI)
+            {
+                scalar y    = Cf[faceI].y();
+                scalar z0   = 3.0e-5;
+                scalar ustar = 0.04318;
+                scalar kappa = 0.41;
+                if (y > z0)
+                {
+                    scalar Umag = (ustar/kappa) * log(y/z0);
+                    scalar ramp = (t <= 4.0) ? (0.1 + 0.9*(t/4.0)) : 1.0;
+                    field[faceI] = vector(ramp * Umag, 0, 0);
+                }
+                else
+                {
+                    field[faceI] = vector(0, 0, 0);
+                }
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+
+    top
+    {
+        type            symmetryPlane;
+    }
+
+    seabed
+    {
+        type            movingWallVelocity;
+        value           uniform (0 0 0);
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

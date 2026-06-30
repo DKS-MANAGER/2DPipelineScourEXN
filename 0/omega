@@ -1,0 +1,75 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 450.6;
+
+boundaryField
+{
+    inlet
+    {
+        type            codedFixedValue;
+        value           uniform 450.6;
+        name            inletOmega;
+
+        codeInclude
+        #{
+            #include "fvCFD.H"
+        #};
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeLibs
+        #{
+            -lfiniteVolume \
+            -lmeshTools
+        #};
+        code
+        #{
+            scalarField& field = *this;
+            scalar t = this->db().time().value();
+            scalar kFull  = 8.7e-5;
+            scalar omFull = 100.0*sqrt(kFull)/(0.09*0.1*0.23);
+            forAll(field, faceI)
+            {
+                field[faceI] = (t <= 4.0)
+                    ? (t/4.0)*omFull
+                    : omFull;
+            }
+        #};
+    }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    top
+    {
+        type            symmetryPlane;
+    }
+
+    seabed
+    {
+        type            omegaWallFunction;
+        value           uniform 450.6;
+        kn              uniform 1.08e-3;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //
