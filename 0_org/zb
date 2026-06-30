@@ -1,3 +1,10 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -7,12 +14,7 @@ FoamFile
     object      zb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-//
-// faMesh edge patches (from constant/finite-area/faMesh/faBoundary):
-//   inletFa        -> ngbPolyPatch = inlet
-//   outletFa       -> ngbPolyPatch = outlet
-//   frontAndBackFa -> ngbPolyPatch = frontAndBack
-// NOTE: there is NO cylinder edge patch in this faMesh.
+// zb: bed elevation [m], initially flat at y = -0.025 m (top of sub-bed block)
 
 dimensions      [0 1 0 0 0 0 0];
 
@@ -22,16 +24,17 @@ boundaryField
 {
     inletFa
     {
-        type            fixedValue;
-        value           uniform -0.025;
+        type            zeroGradient;
     }
-
     outletFa
     {
         type            zeroGradient;
     }
-
-    frontAndBackFa
+    lateralfrontFa
+    {
+        type            empty;
+    }
+    lateralbackFa
     {
         type            empty;
     }

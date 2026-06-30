@@ -1,15 +1,19 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       pointVectorField;
-    location    "0_org";
+    location    "0";
     object      pointDisplacement;
 }
-// Point displacement field for displacementLaplacian moving mesh solver.
-// 'bottom' patch: driven by Exner equation (bed evolution BC).
-// All other patches: zero displacement (fixed).
-// 'cylinder': zero displacement (rigid body - pipeline does not move).
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dimensions      [0 1 0 0 0 0 0];
 
@@ -34,20 +38,22 @@ boundaryField
     }
     bottom
     {
-        // Exner morphodynamic BC:
-        // dz/dt = -morphFac/(1-n) * div(qs)
-        // Applied as fixedValue updated each timestep by sedExnerFoam.
-        // Initial value: zero (flat bed at t=0).
+        type            fixedNormalSlip;
+        n               (0 1 0);
+        value           uniform (0 0 0);
+    }
+    cylinder
+    {
         type            fixedValue;
         value           uniform (0 0 0);
     }
-    lateralfront { type empty; }
-    lateralback  { type empty; }
-    cylinder
+    lateralfront
     {
-        // Rigid pipeline - no displacement
-        type            fixedValue;
-        value           uniform (0 0 0);
+        type            empty;
+    }
+    lateralback
+    {
+        type            empty;
     }
 }
 

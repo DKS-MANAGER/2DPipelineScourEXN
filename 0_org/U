@@ -1,47 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       volVectorField;
-    location    "0_org";
+    location    "0";
     object      U;
 }
-// EXTRACTED from DKS-MANAGER/2DPipelineScour/0_org/U.b
-// Log-law inlet: ustar=0.04318 m/s, kappa=0.41, z0=3e-5 m
-// U = (ustar/kappa) * ln((y - ybed)/z0 + 1)
-// At y=0.1m (mid-depth): U ~ 0.35 m/s
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform (0.35 0 0);
+internalField   uniform (0.4 0 0);
 
 boundaryField
 {
     inlet
     {
-        type            codedFixedValue;
-        value           uniform (0 0 0);
-        name            logLawInletU;
-        code
-        #{
-            const scalar ustar = 0.04318;
-            const scalar kappa = 0.41;
-            const scalar z0    = 3.0e-5;
-            const scalar ybed  = 0.0;    // bed level at t=0
-
-            const fvPatch& p = this->patch();
-            const vectorField& Cf = p.Cf();
-            vectorField& U = *this;
-
-            forAll(Cf, facei)
-            {
-                scalar y = Cf[facei].y() - ybed;
-                scalar Umag = (y > z0)
-                    ? (ustar/kappa)*Foam::log(y/z0)
-                    : 0.0;
-                U[facei] = vector(max(Umag, 0.0), 0, 0);
-            }
-        #};
+        type            fixedValue;
+        value           uniform (0.4 0 0);
     }
     outlet
     {
@@ -55,11 +38,17 @@ boundaryField
     {
         type            noSlip;
     }
-    lateralfront { type empty; }
-    lateralback  { type empty; }
     cylinder
     {
         type            noSlip;
+    }
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
+    {
+        type            empty;
     }
 }
 

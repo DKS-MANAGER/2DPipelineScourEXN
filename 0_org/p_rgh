@@ -1,12 +1,19 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       volScalarField;
-    location    "0_org";
+    location    "0";
     object      p_rgh;
 }
-// p_rgh = p - rho*g*h  (reduced pressure, replaces p_rbgh from baseline)
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dimensions      [0 2 -2 0 0 0 0];
 
@@ -16,9 +23,7 @@ boundaryField
 {
     inlet
     {
-        type            fixedFluxPressure;
-        gradient        uniform 0;
-        value           uniform 0;
+        type            zeroGradient;
     }
     outlet
     {
@@ -27,23 +32,23 @@ boundaryField
     }
     surface
     {
-        type            fixedFluxPressure;
-        gradient        uniform 0;
-        value           uniform 0;
+        type            zeroGradient;
     }
     bottom
     {
-        type            fixedFluxPressure;
-        gradient        uniform 0;
-        value           uniform 0;
+        type            zeroGradient;
     }
-    lateralfront { type empty; }
-    lateralback  { type empty; }
     cylinder
     {
-        type            fixedFluxPressure;
-        gradient        uniform 0;
-        value           uniform 0;
+        type            zeroGradient;
+    }
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
+    {
+        type            empty;
     }
 }
 

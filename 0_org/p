@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.1.0                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -15,9 +15,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// FIXED: kinematic pressure [m2/s2], not physical pressure [Pa].
-// sedExnerFoam solves: div(U) = 0 and dU/dt + div(UU) = -grad(p) + div(nu*grad(U))
-// The p here is p_physical/rho. This matches pimpleFoam convention.
 dimensions      [0 2 -2 0 0 0 0];
 
 internalField   uniform 0;
@@ -28,32 +25,28 @@ boundaryField
     {
         type            zeroGradient;
     }
-
     outlet
     {
-        // PRESERVED: fixes pressure reference to prevent singular system
         type            fixedValue;
         value           uniform 0;
     }
-
-    seabed
+    surface
     {
-        // RENAMED from "bottom". zeroGradient preserved.
         type            zeroGradient;
     }
-
+    bottom
+    {
+        type            zeroGradient;
+    }
     cylinder
     {
         type            zeroGradient;
     }
-
-    top
+    lateralfront
     {
-        // RENAMED from "surface". zeroGradient on rigid-lid is correct.
-        type            zeroGradient;
+        type            empty;
     }
-
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

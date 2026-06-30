@@ -1,27 +1,32 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       volScalarField;
-    location    "0_org";
+    location    "0";
     object      omega;
 }
-// EXTRACTED from DKS-MANAGER/2DPipelineScour/0_org/omega.b
-// omega_inlet = ustar^2 / (Cmu^0.5 * k * y)
-// At y~0.001m (first cell): omega ~ 0.04318^2 / (0.3 * 0.41 * 0.001) = 15.13
-// Using omega_wall = ustar / (Cmu^0.25 * kappa * y_P)
-// inlet value ~15 s-1 (consistent with baseline)
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// omega = k^0.5 / (Cmu^0.25 * l), l=0.01m (1% of pipe D=0.05m)
+// omega ~ 60 * nu / (beta1 * y^2) near wall (omegaWallFunction handles this)
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 15.0;
+internalField   uniform 10;
 
 boundaryField
 {
     inlet
     {
         type            fixedValue;
-        value           uniform 15.0;
+        value           uniform 10;
     }
     outlet
     {
@@ -34,14 +39,20 @@ boundaryField
     bottom
     {
         type            omegaWallFunction;
-        value           uniform 15.0;
+        value           uniform 10;
     }
-    lateralfront { type empty; }
-    lateralback  { type empty; }
     cylinder
     {
         type            omegaWallFunction;
-        value           uniform 15.0;
+        value           uniform 10;
+    }
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
+    {
+        type            empty;
     }
 }
 
