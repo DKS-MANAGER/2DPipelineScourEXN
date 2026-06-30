@@ -108,9 +108,6 @@ solvers
         relTol          0;
     }
 
-    // Cs MUST be bounded [0,1] -- PBiCGStab alone can produce negative
-    // denormals at t=0 when Cs=0 everywhere, which drives a spurious
-    // Exner displacement that collapses near-bed cells -> SIGFPE.
     Cs
     {
         solver          PBiCGStab;
@@ -119,8 +116,6 @@ solvers
         relTol          0;
         minIter         1;
         maxIter         100;
-        minValue        0;
-        maxValue        1;
     }
 
     CsFinal
@@ -131,8 +126,6 @@ solvers
         relTol          0;
         minIter         1;
         maxIter         100;
-        minValue        0;
-        maxValue        1;
     }
 
     pointDisplacement
@@ -202,14 +195,15 @@ PIMPLE
     nNonOrthogonalCorrectors 1;
     pRefCell                0;
     pRefValue               0;
-    morphologicalUpdate     yes;
-    morphoFrequency         1;
 
-    // Delay bed morphology until flow and Cs have spun up.
-    // At t=0 Cs=0 everywhere; the first Exner step would use garbage
-    // near-zero Cs values -> large spurious zb displacement -> cell collapse.
-    // 4 s gives ~40 flow-through times for the inlet profile to develop.
-    morphoStartTime         4.0;
+    // SPIN-UP MODE: morphology OFF.
+    // morphoStartTime is NOT implemented in the sedExnerFoam source --
+    // it is silently ignored. The only working gate is this keyword.
+    // Workflow:
+    //   1. Run to t~4s with morphologicalUpdate no  (flow + Cs develop)
+    //   2. Stop, set morphologicalUpdate yes, restart from latest time
+    morphologicalUpdate     no;
+    morphoFrequency         1;
 
     residualControl
     {

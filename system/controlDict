@@ -16,15 +16,12 @@ startTime       0;
 
 stopAt          endTime;
 
-// PRESERVED: same 45-second physical end time as SedFoam.
-endTime         45;
+endTime         4;
 
-// Initial timestep — same as SedFoam for the ramp-up phase (t < 4s).
 deltaT          1e-4;
 
 writeControl    adjustableRunTime;
 
-// PRESERVED: same write interval as SedFoam for identical output resolution.
 writeInterval   0.5;
 
 purgeWrite      0;
@@ -43,15 +40,10 @@ runTimeModifiable on;
 
 adjustTimeStep  yes;
 
-// Fluid Courant number limit -- preserved from SedFoam during ramp-up.
 maxCo           0.1;
 
-// INCREASED from SedFoam's 1.5e-4 to 5e-3.
-// sedExnerFoam's PIMPLE is implicit -- bottleneck is mesh motion Courant
-// number, not fluid CFL. Gives ~33x speedup over SedFoam wall-clock time.
 maxDeltaT       5e-3;
 
-// ── FUNCTIONS ───────────────────────────────────────────────────────────────
 functions
 {
     scourDepthProbe
@@ -62,24 +54,18 @@ functions
         writeInterval   10;
         probeLocations
         (
-            // x =  0.0     cylinder centre
-            // y = -0.024   1mm above seabed (inside fluid, captures Cs)
-            // z =  0.0005  2D slab midplane centroid
-            ( 0.0  -0.024  0.0005 )
+            // Mid water-column: safe from bed crush for entire run.
+            // y=-0.024 (1mm above bed) was getting destroyed by first
+            // mesh motion step -> probe warning -> SIGFPE in deltaCoeffs.
+            ( 0.0  0.100  0.0005 )
         );
-        // NOTE: Cs is the dimensionless volume fraction (capital C, capital s).
-        // Field lookup is case-sensitive — 'cs' would return empty output.
-        // zb must be sampled separately via postProcess -func sampleFaDict
-        // because zb is an areaScalarField on faMesh, not a volScalarField.
-        fields          ( Cs );
+        fields          ( U p k Cs );
     }
 
     residuals
     {
         type            solverInfo;
         libs            (utilityFunctionObjects);
-        // Cs (capital) matches the actual volScalarField name.
-        // Using 'cs' here returns empty columns for the entire run.
         fields          (U p k omega Cs);
         writeControl    timeStep;
         writeInterval   1;
