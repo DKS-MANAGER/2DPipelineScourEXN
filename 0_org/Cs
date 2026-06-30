@@ -1,0 +1,70 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      Cs;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Suspended sediment concentration [-] (dimensionless volume fraction).
+// sedExnerFoam transports Cs as a passive scalar by fluid velocity U and
+// multiplies internally by rhoSediment (from sedimentProperties) wherever
+// a mass flux is needed.  Do NOT use [1 -3 0 0 0 0 0] (kg/m3) here —
+// that triggers a dimensional-mismatch abort the first time the erosion
+// flux is assembled.
+
+dimensions      [0 0 0 0 0 0 0];    // dimensionless volume fraction
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        // Equilibrium suspended load at inlet.
+        // Set to 0 initially — replace with a profile via setFields
+        // once you know the bed shear stress at inlet.
+        // For the comparison run, a uniform low value (e.g. 1e-4)
+        // is acceptable for d50=0.2mm sand under the log-law inlet.
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    outlet
+    {
+        // Allow suspended load to leave freely — inletOutlet prevents
+        // backflow from re-injecting sediment if flow reverses near outlet.
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+
+    seabed
+    {
+        // This is where erosion and deposition happen.
+        // sedExnerFoam applies its own van Rijn erosion/deposition flux BC
+        // at runtime, overriding this initialisation state.
+        type            zeroGradient;
+    }
+
+    cylinder
+    {
+        // No sediment flux through the cylinder wall.
+        type            zeroGradient;
+    }
+
+    top
+    {
+        // No sediment at the free surface (rigid lid).
+        type            zeroGradient;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

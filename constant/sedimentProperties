@@ -8,7 +8,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// ── GRAIN PROPERTIES ───────────────────────────────────────────────────────────────
+// ── GRAIN PROPERTIES ────────────────────────────────────────────────────────
 // All values extracted directly from SedFoam constant/transportProperties
 // phasea block. Do not modify without updating transportProperties to match.
 
@@ -24,33 +24,35 @@ porosity        0.365;          // [-]  = 1 - alphaMax(0.635) from ppProperties
 //
 // ws  = 0.022 m/s  (settling velocity, van Rijn 1984, D*=9.1, D*<10 regime)
 //   Formula: ws = (nu/d50) * (sqrt(0.25 + (4/3)*D*^3/18) - 0.5)^2
-//          = (1e-6/3.6e-4) * (sqrt(0.25 + (4/3)*9.1^3/18) - 0.5)^2
-//          = 0.022 m/s
-//   CORRECTION: previous comment stated 0.054 m/s -- this is WRONG.
-//   0.054 m/s corresponds to d50 ~ 0.8 mm (D* ~ 20), not d50=0.36mm.
 //
 // th_c = 0.034  (critical Shields, Soulsby-Whitehouse 1997, D*=9.1)
 //   Formula: th_c = 0.30/(1+1.2*D*) + 0.055*(1-exp(-0.020*D*))
-//          = 0.30/10.92 + 0.055*(1-exp(-0.182)) = 0.0275 + 0.0098 = 0.034
 
-// ── BEDLOAD MODEL ───────────────────────────────────────────────────────────────
+// ── BEDLOAD MODEL ────────────────────────────────────────────────────────────
+// Using Nielsen (1992) form: q_b* = alpha * sqrt(theta) * (theta - theta_c)
+// Coefficients MUST match bedloadProperties to avoid sub-model mismatch.
+// bedloadProperties alpha=7.2 is the authoritative source for the solver;
+// the NielsenCoeffs block here is retained as documentation only.
 bedloadModel    Nielsen;
 
 NielsenCoeffs
 {
-    a       12.0;
-    b       1.5;
+    // Nielsen (1992) original: alpha=7.2, aExp=0.5, bExp=1
+    // (matches bedloadProperties exactly)
+    alpha           7.2;
+    aExp            0.5;
+    bExp            1.0;
 }
 
-// ── CRITICAL SHIELDS PARAMETER ───────────────────────────────────────────────
+// ── CRITICAL SHIELDS PARAMETER ──────────────────────────────────────────────
 criticalShieldsModel    SoulsbyWhitehouse1997;
 
-// ── SLOPE CORRECTION ──────────────────────────────────────────────────────────
+// ── SLOPE CORRECTION ────────────────────────────────────────────────────────
 slopeCorrection         on;
 slopeCorrectionModel    FredsoeDeigaard1992;
 angleOfRepose           32;
 
-// ── AVALANCHE MODEL ─────────────────────────────────────────────────────────────
+// ── AVALANCHE MODEL ─────────────────────────────────────────────────────────
 avalancheModel          on;
 avalancheCoeffs
 {
@@ -58,7 +60,7 @@ avalancheCoeffs
     diffusionCoeff      0.1;
 }
 
-// ── SUSPENDED LOAD MODEL ──────────────────────────────────────────────────────
+// ── SUSPENDED LOAD MODEL ────────────────────────────────────────────────────
 suspendedLoad           on;
 settlingVelocityModel   vanRijn1984;
 SchmidtNumber           1.0;

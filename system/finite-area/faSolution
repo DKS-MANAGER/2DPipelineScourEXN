@@ -6,14 +6,19 @@ FoamFile
     object      faSolution;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+//
+// Finite-area linear system solvers.
+// sedExnerFoam solves for 'zb' (bed elevation areaScalarField).
+// The previous entry used key 'h' which is not the field name — the
+// solver would fall through to a default (or abort) silently.
 
 solvers
 {
-    h
+    zb
     {
         solver          PCG;
         preconditioner  DIC;
-        tolerance       1e-09;
+        tolerance       1e-10;
         relTol          0;
     }
 }

@@ -171,6 +171,16 @@ PIMPLE
     pRefValue               0;
     morphologicalUpdate     yes;
     morphoFrequency         1;
+
+    // residualControl lets PIMPLE exit the outer-corrector loop early
+    // when residuals have already dropped below these thresholds.
+    // Without this the solver always runs all nOuterCorrectors iterations
+    // regardless of convergence — wasting ~30-50% of CPU time.
+    residualControl
+    {
+        U       1e-4;
+        p       1e-4;
+    }
 }
 
 faSolution

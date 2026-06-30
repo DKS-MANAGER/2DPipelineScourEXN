@@ -2,6 +2,8 @@ processor*/
 postProcessing/
 dynamicCode/
 *.foam
+foam.foam
 log.*
+*.log
 *.orig
 0/

@@ -46,8 +46,6 @@ adjustTimeStep  yes;
 // Fluid Courant number limit -- preserved from SedFoam during ramp-up.
 maxCo           0.1;
 
-// REMOVED: maxAlphaCo -- SedFoam-specific, not valid in sedExnerFoam.
-
 // INCREASED from SedFoam's 1.5e-4 to 5e-3.
 // sedExnerFoam's PIMPLE is implicit -- bottleneck is mesh motion Courant
 // number, not fluid CFL. Gives ~33x speedup over SedFoam wall-clock time.
@@ -64,38 +62,25 @@ functions
         writeInterval   10;
         probeLocations
         (
-            // FIXED: was (2.0  0.0  0.075)
-            //
-            // Error 1 -- y=0.0: bed is at y=-0.025 in preserved SedFoam
-            // coordinate system. A probe at y=0 sits 25mm above the bed
-            // in mid-water. zb is a faMesh areaScalarField -- probing it
-            // via a volume probe at y=0 returns the cell-centre interpolated
-            // value, which is zero everywhere except on the bed patch itself.
-            // The probe gave a flat zb=-0.0 readout every timestep while
-            // the mesh was actively deforming.
-            //
-            // Error 2 -- z=0.075: 2D slab spans z=0.0 to z=0.001 only.
-            // z=0.075 is 75x outside the domain. OpenFOAM snaps to nearest
-            // cell (z=0.0005 midplane) but emits a startup warning and
-            // the log coordinate does not match actual probe location.
-            //
-            // Correct location:
-            //   x =  0.0     cylinder centre (SedFoam x=0 coord)
-            //   y = -0.024   1mm above seabed (inside fluid, captures cs)
-            //   z =  0.0005  2D slab midplane centroid
+            // x =  0.0     cylinder centre
+            // y = -0.024   1mm above seabed (inside fluid, captures Cs)
+            // z =  0.0005  2D slab midplane centroid
             ( 0.0  -0.024  0.0005 )
         );
-        fields          ( cs );     // cs probed here as volume field
-        // NOTE: zb must be sampled separately via postProcess -func sampleFaDict
+        // NOTE: Cs is the dimensionless volume fraction (capital C, capital s).
+        // Field lookup is case-sensitive — 'cs' would return empty output.
+        // zb must be sampled separately via postProcess -func sampleFaDict
         // because zb is an areaScalarField on faMesh, not a volScalarField.
-        // See README for the faSampleDict setup.
+        fields          ( Cs );
     }
 
     residuals
     {
         type            solverInfo;
         libs            (utilityFunctionObjects);
-        fields          (U p k omega cs);
+        // Cs (capital) matches the actual volScalarField name.
+        // Using 'cs' here returns empty columns for the entire run.
+        fields          (U p k omega Cs);
         writeControl    timeStep;
         writeInterval   1;
     }
