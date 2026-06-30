@@ -10,7 +10,34 @@ FoamFile
 
 solvers
 {
-    // ── PRESSURE ─────────────────────────────────────────────────────────────────
+    pcorr
+    {
+        solver              GAMG;
+        tolerance           1e-6;
+        relTol              0;
+        smoother            DIC;
+        nPreSweeps          0;
+        nPostSweeps         2;
+        cacheAgglomeration  true;
+        nCellsInCoarsestLevel 10;
+        agglomerator        faceAreaPair;
+        mergeLevels         1;
+    }
+
+    pcorrFinal
+    {
+        solver              GAMG;
+        tolerance           1e-6;
+        relTol              0;
+        smoother            DIC;
+        nPreSweeps          0;
+        nPostSweeps         2;
+        cacheAgglomeration  true;
+        nCellsInCoarsestLevel 10;
+        agglomerator        faceAreaPair;
+        mergeLevels         1;
+    }
+
     p
     {
         solver              GAMG;
@@ -25,6 +52,7 @@ solvers
         agglomerator        faceAreaPair;
         mergeLevels         1;
     }
+
     pFinal
     {
         solver              GAMG;
@@ -40,7 +68,6 @@ solvers
         mergeLevels         1;
     }
 
-    // ── VELOCITY ────────────────────────────────────────────────────────────────
     U
     {
         solver          PBiCGStab;
@@ -48,6 +75,7 @@ solvers
         tolerance       1e-6;
         relTol          0.01;
     }
+
     UFinal
     {
         solver          PBiCGStab;
@@ -56,11 +84,6 @@ solvers
         relTol          0;
     }
 
-    // ── TURBULENCE ─────────────────────────────────────────────────────────────
-    // NOTE: v2412 parser does NOT support $"quoted-regex" macro expansion.
-    // The construct  "(k|omega)Final" { $"(k|omega)"; }  causes:
-    //   FOAM FATAL IO ERROR: Found ERROR but expected }
-    // Fix: spell out each Final entry explicitly.
     "(k|omega)"
     {
         solver          PBiCGStab;
@@ -68,6 +91,7 @@ solvers
         tolerance       1e-8;
         relTol          0.01;
     }
+
     kFinal
     {
         solver          PBiCGStab;
@@ -75,6 +99,7 @@ solvers
         tolerance       1e-8;
         relTol          0;
     }
+
     omegaFinal
     {
         solver          PBiCGStab;
@@ -83,16 +108,7 @@ solvers
         relTol          0;
     }
 
-    // ── SUSPENDED SEDIMENT ──────────────────────────────────────────────────
-    cs
-    {
-        solver          PBiCGStab;
-        preconditioner  DILU;
-        tolerance       1e-10;
-        relTol          0;
-        minIter         1;
-    }
-    csFinal
+    Cs
     {
         solver          PBiCGStab;
         preconditioner  DILU;
@@ -101,7 +117,15 @@ solvers
         minIter         1;
     }
 
-    // ── MESH MOTION (displacement Laplacian) ──────────────────────────────
+    CsFinal
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0;
+        minIter         1;
+    }
+
     cellDisplacement
     {
         solver          GAMG;
@@ -113,6 +137,7 @@ solvers
         agglomerator    faceAreaPair;
         mergeLevels     1;
     }
+
     cellDisplacementFinal
     {
         solver          GAMG;
@@ -126,7 +151,6 @@ solvers
     }
 }
 
-// ── RELAXATION ────────────────────────────────────────────────────────────────────
 relaxationFactors
 {
     equations
@@ -134,11 +158,10 @@ relaxationFactors
         U               0.9;
         k               0.7;
         omega           0.7;
-        cs              0.9;
+        Cs              0.9;
     }
 }
 
-// ── PIMPLE ────────────────────────────────────────────────────────────────────────
 PIMPLE
 {
     nOuterCorrectors        2;
@@ -150,7 +173,6 @@ PIMPLE
     morphoFrequency         1;
 }
 
-// ── FASOLUTION (Exner equation on faMesh) ──────────────────────────────────
 faSolution
 {
     solvers

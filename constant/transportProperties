@@ -6,6 +6,8 @@ FoamFile
     location    "constant";
     object      transportProperties;
 }
+
+CsMax           [0 0 0 0 0 0 0]   0.635;    // max vol. sed. concentration (1 - porosity)
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 transportModel  Newtonian;

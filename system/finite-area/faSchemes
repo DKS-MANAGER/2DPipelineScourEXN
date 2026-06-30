@@ -3,49 +3,15 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system/finite-area";
     object      faSchemes;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-//
-// faSchemes — finite-area discretisation schemes for sedExnerFoam
-//
-// These schemes govern the Exner bed-evolution equation solved on the
-// faMesh (seabed patch). The equation is:
-//   dz_b/dt + (1/(1-n)) * div(q_b + q_s) = 0
-//
-// Spatial accuracy: Gauss linear (2nd order) throughout.
-// Temporal:  Euler (1st order, bounded) — stable for morphodynamic
-//            timesteps which are much larger than the flow timestep.
 
-ddtSchemes
-{
-    default         Euler;
-}
-
-gradSchemes
-{
-    default         Gauss linear;
-}
-
-divSchemes
-{
-    default         Gauss linear;
-}
-
-laplacianSchemes
-{
-    default         Gauss linear corrected;
-}
-
-interpolationSchemes
-{
-    default         linear;
-}
-
-snGradSchemes
-{
-    default         corrected;
-}
+ddtSchemes      {}
+gradSchemes     { default Gauss linear; }
+divSchemes      {}
+laplacianSchemes { default Gauss linear corrected; }
+interpolationSchemes {}
+lnGradSchemes   { default corrected; }
 
 // ************************************************************************* //

@@ -1,0 +1,49 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      bedloadProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+sedimentBed             on;
+sedimentBedPatches      (seabed);
+
+bedMotion               on;
+
+ABorder                 1;
+
+fixedFaPatches          ();
+
+bedloadModel
+{
+    type                Nielsen;
+    alpha               7.2;
+    aExp                0.5;
+    bExp                1;
+    slopeCorrecton      off;
+    gamma               0.1;
+    avalanche           on;
+    Qav                 1e-3;
+    alphaFiltBeta       0.1;
+    NfiltBeta           1;
+    coefShields         1;
+}
+
+criticalShieldsModel
+{
+    type                Soulsby;
+    slopeCorrection     on;
+}
+
+morphoAccFactor         1;
+
+filterExner             off;
+alphaFiltExner          0.1;
+NfiltExner              1;
+
+rigidBed               off;
+
+// ************************************************************************* //

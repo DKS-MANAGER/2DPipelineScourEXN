@@ -36,6 +36,11 @@ gradSchemes
 
 divSchemes
 {
+    div((nuEff*dev2(T(grad(U)))))  Gauss linear;
+    div(phip,Cs)          Gauss linearUpwind grad(Cs);
+    div(phi,Cs)           Gauss linearUpwind grad(Cs);
+    div(phi,Ws)           Gauss linearUpwind grad(Ws);
+    div(phip,Ws)          Gauss linearUpwind grad(Ws);
     default         none;
 
     // ── MOMENTUM ─────────────────────────────────────────────────────
@@ -135,3 +140,7 @@ faSchemes
 }
 
 // ************************************************************************* //
+wallDist
+{
+    method meshWave;
+}

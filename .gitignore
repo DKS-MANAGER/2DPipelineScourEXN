@@ -1,37 +1,7 @@
-# ============================================================
-# OpenFOAM case — generated runtime files
-# NEVER commit these; they are large, machine-specific, and
-# fully reproducible by running Allrun from scratch.
-# ============================================================
-
-# Parallel decomposition directories
 processor*/
-
-# Time directories (solver output)
-[0-9]*/
-!0_org/
-
-# Log files (regenerated each run)
-log.*
-
-# Generated mesh (reconstructed from blockMesh+snappy+extrudeMesh)
-constant/polyMesh/
-
-# Generated finite-area mesh (created by makeFaMesh)
-constant/faMesh/
-
-# ParaView / Ensight postprocessing
-*.foam
-*.case
 postProcessing/
-VTK/
-
-# OS noise
-.DS_Store
-Thumbs.db
-
-# Editor noise
-*.swp
-*.swo
-*~
-.vscode/
+dynamicCode/
+*.foam
+log.*
+*.orig
+0/
