@@ -126,6 +126,32 @@ solvers
         minIter         1;
     }
 
+    // displacementPointSmoothing solves for the POINT displacement field.
+    // Without this entry the solver falls back to an untuned default.
+    pointDisplacement
+    {
+        solver          GAMG;
+        tolerance       1e-8;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+
+    pointDisplacementFinal
+    {
+        solver          GAMG;
+        tolerance       1e-8;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+
     cellDisplacement
     {
         solver          GAMG;
@@ -172,10 +198,6 @@ PIMPLE
     morphologicalUpdate     yes;
     morphoFrequency         1;
 
-    // OpenFOAM v2412: residualControl entries MUST be sub-dictionaries.
-    // Using bare scalars (e.g. "U 1e-4;") throws:
-    //   "Residual data for U must be specified as a dictionary"
-    // Correct form requires at minimum a 'tolerance' key inside {}.
     residualControl
     {
         U

@@ -16,22 +16,18 @@ boundaryField
 {
     seabed
     {
-        // Driven by sedExnerFoam Exner solver every timestep.
         type            fixedValue;
         value           uniform (0 0 0);
     }
 
     cylinder
     {
-        // Rigid body -- never moves.
         type            fixedValue;
         value           uniform (0 0 0);
     }
 
     inlet
     {
-        // Slip: zero normal displacement, free tangential.
-        // Allows smoother to absorb seabed motion without collapsing cells.
         type            slip;
     }
 
