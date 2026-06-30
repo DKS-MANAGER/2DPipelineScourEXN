@@ -172,14 +172,22 @@ PIMPLE
     morphologicalUpdate     yes;
     morphoFrequency         1;
 
-    // residualControl lets PIMPLE exit the outer-corrector loop early
-    // when residuals have already dropped below these thresholds.
-    // Without this the solver always runs all nOuterCorrectors iterations
-    // regardless of convergence — wasting ~30-50% of CPU time.
+    // OpenFOAM v2412: residualControl entries MUST be sub-dictionaries.
+    // Using bare scalars (e.g. "U 1e-4;") throws:
+    //   "Residual data for U must be specified as a dictionary"
+    // Correct form requires at minimum a 'tolerance' key inside {}.
     residualControl
     {
-        U       1e-4;
-        p       1e-4;
+        U
+        {
+            tolerance   1e-4;
+            relTol      0;
+        }
+        p
+        {
+            tolerance   1e-4;
+            relTol      0;
+        }
     }
 }
 
