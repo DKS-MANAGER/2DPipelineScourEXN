@@ -5,6 +5,7 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// FIX: removed non-existent 'cylinder' patch block.
 FoamFile
 {
     version     2.0;
@@ -23,12 +24,12 @@ boundaryField
 {
     inlet
     {
-        type            zeroGradient;
+        type            calculated;
         value           uniform 0;
     }
     outlet
     {
-        type            zeroGradient;
+        type            calculated;
         value           uniform 0;
     }
     top
@@ -37,17 +38,8 @@ boundaryField
     }
     seabed
     {
-        type            zeroGradient;
+        type            nutUSpaldingWallFunction;
         value           uniform 0;
-    }
-    cylinder
-    {
-        type            nutkWallFunction;
-        value           uniform 0;
-    }
-    frontAndBack
-    {
-        type            empty;
     }
     frontAndBack
     {

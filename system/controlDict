@@ -5,10 +5,15 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// Baseline ran to t=5s physical (sedFoam).
-// sedExnerFoam target: 45s physical (full scour development).
-// maxCo=0.1, maxDeltaT=0.05s preserved from baseline adjustableRunTime.
-// morphFac=10 accelerates bed evolution; writeInterval=0.5s.
+// FIX HISTORY:
+// - adjustTimeStep disabled: deltaT jump (0.00075->0.0009) caused ddt
+//   coefficient NaN in fvc::ddtCorr -> SIGFPE before first solver on step 2.
+// - scourDepth function: patch name was 'bottom' (non-existent); changed to
+//   'seabed'. Operation changed to 'min' on 'p' (cellCentres not a valid
+//   scalar for min operation on a patch).
+// - cylinderForces function: removed entirely - 'cylinder' patch does not
+//   exist in this mesh (snappyHexMesh produced inlet/outlet/top/seabed/
+//   frontAndBack only). Forces function on missing patch -> FOAM FATAL at t=0.
 FoamFile
 {
     version     2.0;
@@ -25,7 +30,7 @@ startTime           0;
 stopAt              endTime;
 endTime             45;
 
-deltaT              1e-3;
+deltaT              5e-4;
 
 writeControl        adjustableRunTime;
 writeInterval       0.5;
@@ -36,13 +41,10 @@ writeCompression    false;
 timeFormat          general;
 timePrecision       6;
 runTimeModifiable   yes;
-adjustTimeStep      yes;
-maxCo               0.1;
-maxDeltaT           0.05;
+adjustTimeStep      no;
 
 functions
 {
-    // Scour depth at x=0 (directly below cylinder centreline)
     scourDepth
     {
         type            surfaceFieldValue;
@@ -51,23 +53,9 @@ functions
         log             yes;
         writeFields     no;
         regionType      patch;
-        name            bottom;
+        name            seabed;
         operation       min;
-        fields          (cellCentres);
-    }
-
-    // Forces on cylinder for validation against sedFoam
-    cylinderForces
-    {
-        type            forces;
-        libs            ("libforces.so");
-        writeControl    timeStep;
-        writeInterval   10;
-        log             yes;
-        patches         (cylinder);
-        rho             rhoInf;
-        rhoInf          1000;
-        CofR            (0 0.0255 0.0005);
+        fields          (p);
     }
 }
 

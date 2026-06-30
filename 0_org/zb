@@ -5,20 +5,23 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// zb: bed elevation relative to datum [m].
+// internalField set to 0 (flat bed at datum). Was -0.025 which drove
+// spurious mesh motion on step 1 before any sediment transport occurred.
+// The FA solver will evolve zb from this flat initial state.
 FoamFile
 {
     version     2.0;
     format      ascii;
-    class       areaScalarField;
+    class       volScalarField;
     location    "0";
     object      zb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// zb: bed elevation [m], initially flat at y = -0.025 m (top of sub-bed block)
 
 dimensions      [0 1 0 0 0 0 0];
 
-internalField   uniform -0.025;
+internalField   uniform 0;
 
 boundaryField
 {
@@ -30,11 +33,7 @@ boundaryField
     {
         type            zeroGradient;
     }
-    lateralfrontFa
-    {
-        type            empty;
-    }
-    lateralbackFa
+    frontAndBackFa
     {
         type            empty;
     }

@@ -54,10 +54,37 @@ solvers
         relTol          0;
     }
 
+    // p required separately - sedExnerFoam solves both p and p_rgh
+    p
+    {
+        solver          GAMG;
+        tolerance       1e-6;
+        relTol          0.0001;
+        smoother        DIC;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+    pFinal
+    {
+        $p;
+        tolerance       1e-6;
+        relTol          0;
+    }
+
     pcorr
     {
         $p_rgh;
         tolerance       1e-4;
+        relTol          0;
+    }
+    pcorrFinal
+    {
+        $pcorr;
         relTol          0;
     }
 
@@ -74,7 +101,6 @@ solvers
         relTol          0;
     }
 
-    // k and omega expanded separately - $"regex" not valid in v2412
     k
     {
         solver          PBiCGStab;
@@ -136,6 +162,22 @@ PIMPLE
     pRefValue                0;
     correctPhi               yes;
     moveMeshOuterCorrectors  yes;
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p_rgh           0.3;
+        p               0.3;
+    }
+    equations
+    {
+        U               0.5;
+        k               0.5;
+        omega           0.5;
+        Cs              0.3;
+    }
 }
 
 // ************************************************************************* //

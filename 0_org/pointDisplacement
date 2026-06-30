@@ -5,6 +5,11 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// FIX: seabed changed from fixedNormalSlip (n=(0 1 0)) to fixedValue zero.
+//      fixedNormalSlip passes the normal (y) component through, allowing
+//      the Exner/FA->FV coupling to inject non-zero displacement on step 1,
+//      which then corrupts face deltaCoeffs -> SIGFPE on step 2.
+// FIX: removed duplicate 'frontAndBack' block.
 FoamFile
 {
     version     2.0;
@@ -38,13 +43,8 @@ boundaryField
     }
     seabed
     {
-        type            fixedNormalSlip;
-        n               (0 1 0);
+        type            fixedValue;
         value           uniform (0 0 0);
-    }
-    frontAndBack
-    {
-        type            empty;
     }
     frontAndBack
     {

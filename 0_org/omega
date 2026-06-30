@@ -5,6 +5,8 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// FIX: removed non-existent 'cylinder' patch block.
+// FIX: removed duplicate 'frontAndBack' block.
 FoamFile
 {
     version     2.0;
@@ -14,19 +16,17 @@ FoamFile
     object      omega;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// omega = k^0.5 / (Cmu^0.25 * l), l=0.01m (1% of pipe D=0.05m)
-// omega ~ 60 * nu / (beta1 * y^2) near wall (omegaWallFunction handles this)
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 10;
+internalField   uniform 1;
 
 boundaryField
 {
     inlet
     {
-        type            zeroGradient;
-        value           uniform 10;
+        type            fixedValue;
+        value           uniform 1;
     }
     outlet
     {
@@ -38,17 +38,8 @@ boundaryField
     }
     seabed
     {
-        type            zeroGradient;
-        value           uniform 10;
-    }
-    cylinder
-    {
         type            omegaWallFunction;
-        value           uniform 10;
-    }
-    frontAndBack
-    {
-        type            empty;
+        value           uniform 1;
     }
     frontAndBack
     {
