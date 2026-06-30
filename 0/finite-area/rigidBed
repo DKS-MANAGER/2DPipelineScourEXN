@@ -2,28 +2,26 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       areaScalarField;
-    location    "0";
-    object      zb;
+    class       areaVectorField;
+    location    "0/finite-area";
+    object      rigidBed;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 //
-// faMesh edge patches (from constant/finite-area/faMesh/faBoundary):
-//   inletFa        -> ngbPolyPatch = inlet
-//   outletFa       -> ngbPolyPatch = outlet
-//   frontAndBackFa -> ngbPolyPatch = frontAndBack
-// NOTE: there is NO cylinder edge patch in this faMesh.
+// rigidBed: areaVectorField on the faMesh.
+// Zero everywhere = no rigid body displacement imposed on the bed.
+// The Exner equation drives all bed motion via zb.
 
 dimensions      [0 1 0 0 0 0 0];
 
-internalField   uniform -0.025;
+internalField   uniform (0 0 0);
 
 boundaryField
 {
     inletFa
     {
         type            fixedValue;
-        value           uniform -0.025;
+        value           uniform (0 0 0);
     }
 
     outletFa

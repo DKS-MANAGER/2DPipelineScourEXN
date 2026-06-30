@@ -3,16 +3,17 @@ FoamFile
     version     2.0;
     format      ascii;
     class       areaScalarField;
-    location    "0";
+    location    "0/finite-area";
     object      zb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 //
+// Bed elevation [m] from fixed datum.
+// seabed patch sits at y = -0.025 m.
 // faMesh edge patches (from constant/finite-area/faMesh/faBoundary):
 //   inletFa        -> ngbPolyPatch = inlet
 //   outletFa       -> ngbPolyPatch = outlet
-//   frontAndBackFa -> ngbPolyPatch = frontAndBack
-// NOTE: there is NO cylinder edge patch in this faMesh.
+//   frontAndBackFa -> ngbPolyPatch = frontAndBack (empty)
 
 dimensions      [0 1 0 0 0 0 0];
 

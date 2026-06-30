@@ -44,9 +44,8 @@ filterExner             off;
 alphaFiltExner          0.1;
 NfiltExner              1;
 
-// SPIN-UP MODE: bed is frozen while flow and Cs develop.
-// Once the run reaches t=4s and residuals are flat, stop the run,
-// set rigidBed to 'off', and restart from the latest time directory.
-rigidBed               on;
+// rigidBed keyword removed.
+// Bed motion is Exner-driven via 0/finite-area/rigidBed areaVectorField
+// (all zeros). Morphological update gated by morphologicalUpdate in fvSolution.
 
 // ************************************************************************* //
