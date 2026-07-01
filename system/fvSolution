@@ -5,6 +5,21 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// FIX (SIGFPE at Time=0.001, PIMPLE iter 1, before any solver output):
+//
+// Root cause: correctPhi yes + moveMeshOuterCorrectors yes causes
+// mesh.controlledUpdate() + correctPhi.H to run at the START of every
+// PIMPLE iteration, including step 2.
+//
+// At step 2, the Courant number jumped from 0.066 -> 0.282 after step 1
+// (inlet corner velocity gradient: fixedValue (0.4 0 0) meets noSlip seabed).
+// correctPhi solves: div(phi_corr) = div(U) over the face flux field.
+// With the large Co jump and no mesh motion to justify the correction,
+// the pcorr GAMG solve produces face fluxes with 1/deltaCoeffs -> large
+// values at skewed inlet-corner faces -> overflow -> SIGFPE.
+//
+// Fix: correctPhi no + moveMeshOuterCorrectors no for Phase 1 (bedMotion off).
+// These must be re-enabled for Phase 2 (bedMotion on, mesh actually moves).
 FoamFile
 {
     version     2.0;
@@ -33,33 +48,11 @@ solvers
         relTol          0;
     }
 
-    p_rgh
-    {
-        solver          GAMG;
-        tolerance       1e-6;
-        relTol          0.0001;
-        smoother        DIC;
-        nPreSweeps      0;
-        nPostSweeps     2;
-        nFinestSweeps   2;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
-    p_rghFinal
-    {
-        $p_rgh;
-        tolerance       1e-6;
-        relTol          0;
-    }
-
-    // p required separately - sedExnerFoam solves both p and p_rgh
     p
     {
         solver          GAMG;
         tolerance       1e-6;
-        relTol          0.0001;
+        relTol          0.01;
         smoother        DIC;
         nPreSweeps      0;
         nPostSweeps     2;
@@ -78,7 +71,7 @@ solvers
 
     pcorr
     {
-        $p_rgh;
+        $p;
         tolerance       1e-4;
         relTol          0;
     }
@@ -92,8 +85,8 @@ solvers
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-6;
-        relTol          0;
+        tolerance       1e-7;
+        relTol          0.01;
     }
     UFinal
     {
@@ -106,7 +99,7 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-9;
-        relTol          0;
+        relTol          0.01;
     }
     kFinal
     {
@@ -119,7 +112,7 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-9;
-        relTol          0;
+        relTol          0.01;
     }
     omegaFinal
     {
@@ -132,7 +125,7 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-9;
-        relTol          0;
+        relTol          0.01;
     }
     CsFinal
     {
@@ -145,7 +138,7 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-9;
-        relTol          0;
+        relTol          0.01;
     }
     hFinal
     {
@@ -158,25 +151,29 @@ PIMPLE
 {
     nCorrectors              2;
     nNonOrthogonalCorrectors 1;
-    pRefPoint                (0.9999 0.2049 0.0);
+    pRefCell                 0;
     pRefValue                0;
-    correctPhi               yes;
-    moveMeshOuterCorrectors  yes;
+
+    // PHASE 1 (bedMotion off): mesh never moves, correctPhi and
+    // moveMeshOuterCorrectors must be OFF to avoid spurious flux
+    // corrections that cause SIGFPE at step 2.
+    // Re-enable both for Phase 2 (bedMotion on).
+    correctPhi               no;
+    moveMeshOuterCorrectors  no;
 }
 
 relaxationFactors
 {
     fields
     {
-        p_rgh           0.3;
         p               0.3;
     }
     equations
     {
-        U               0.5;
-        k               0.5;
-        omega           0.5;
-        Cs              0.3;
+        U               0.7;
+        k               0.7;
+        omega           0.7;
+        Cs              0.5;
     }
 }
 
