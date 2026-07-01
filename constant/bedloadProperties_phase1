@@ -5,12 +5,19 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// PHASE 2 bedloadProperties — copy over constant/bedloadProperties
-// AFTER spin-up (t=2s) completes successfully.
-// Usage:
-//   cp constant/bedloadProperties_phase2 constant/bedloadProperties
-//   # edit system/controlDict: startFrom latestTime, endTime 45
-//   sedExnerFoam 2>&1 | tee log.sedExnerFoam_phase2
+// FIX: Added 'saturationType none' (was completely missing).
+//
+// bedload.H reads saturationType from this dict. With no keyword present,
+// saturationType = "" which matches none of the three valid branches:
+//   "implicit1D" | "explicit" | "none"
+// → falls into the else { FatalError } branch
+// → OpenFOAM FatalError raises SIGABRT, caught by trapFpe, printed as SIGFPE.
+//
+// PHASE 1 (spin-up, bedMotion off): 'none' is correct — qb = qsat directly.
+// PHASE 2 (scour, bedMotion on): change to 'explicit' and add Lsat/Tsat.
+//   saturationType   explicit;
+//   Lsat             5e-3;   // 5 mm — Renaud et al. 2026, Sec 5.2.3
+//   Tsat             0.01;   // 0.01 s
 FoamFile
 {
     version     2.0;
@@ -25,14 +32,18 @@ FoamFile
 sedimentBed             on;
 sedimentBedPatches      (bottom);
 
-// PHASE 2: bed motion ON — Exner drives mesh deformation
-bedMotion               on;
+// PHASE 1 (spin-up 0-2s): bedMotion OFF — mesh stays fixed while flow
+// develops. Change to 'on' for Phase 2 (2-45s) restart.
+bedMotion               off;
 
-// Adams-Bashforth order 1 — requires a valid restart with stored oldTime
-// fields. Safe after spin-up provides t=2s as latestTime.
-ABorder                 1;
+// Euler explicit (order 0): safe for cold start, no dVsed.oldTime() required.
+ABorder                 0;
 
 fixedFaPatches          ();
+
+// SATURATION: 'none' for phase 1 (qb = qsat, no saturation equation).
+// Switch to 'explicit' with Lsat/Tsat for phase 2 (Renaud et al. 2026).
+saturationType          none;
 
 bedloadModel
 {
@@ -55,12 +66,11 @@ criticalShieldsModel
     slopeCorrection     on;
 }
 
-// morphoAccFactor=10 accelerates bed evolution in Phase 2
-morphoAccFactor         10;
+morphoAccFactor         1;
 
-filterExner             on;
+filterExner             off;
 alphaFiltExner          0.1;
-NfiltExner              3;
+NfiltExner              1;
 
 rigidBed                off;
 

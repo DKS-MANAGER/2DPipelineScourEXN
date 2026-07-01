@@ -31,15 +31,19 @@ boundaryField
         type            fixedValue;
         value           uniform 0;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
         type            zeroGradient;
     }
-    frontAndBack
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
     {
         type            empty;
     }

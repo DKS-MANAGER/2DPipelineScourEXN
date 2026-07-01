@@ -5,11 +5,12 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// PHASE 2 controlDict — copy over system/controlDict after spin-up.
-// Usage (after Phase 1 reaches t=2s):
-//   cp system/controlDict_phase2 system/controlDict
-//   cp constant/bedloadProperties_phase2 constant/bedloadProperties
-//   sedExnerFoam 2>&1 | tee log.sedExnerFoam_phase2
+// TWO-PHASE RUN STRATEGY:
+// Phase 1 (this file): bedMotion=off, spin-up 0->2s, fixed deltaT=5e-4.
+//   Goal: develop fully turbulent flow profile before any bed evolution.
+// Phase 2: copy bedloadProperties_phase2 -> bedloadProperties,
+//   set startFrom latestTime, endTime 45, re-enable adjustTimeStep.
+//   morphoAccFactor=10 then accelerates scour over 45s physical.
 FoamFile
 {
     version     2.0;
@@ -24,7 +25,7 @@ application         sedExnerFoam;
 startFrom           latestTime;
 startTime           0;
 stopAt              endTime;
-endTime             45;
+endTime             2;
 
 deltaT              5e-4;
 
@@ -37,9 +38,7 @@ writeCompression    false;
 timeFormat          general;
 timePrecision       6;
 runTimeModifiable   yes;
-adjustTimeStep      yes;
-maxCo               0.4;
-maxDeltaT           0.005;
+adjustTimeStep      no;
 
 // All custom libraries from sedExnerFoam user build
 libs

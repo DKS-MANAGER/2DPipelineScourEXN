@@ -31,11 +31,11 @@ boundaryField
         type            calculated;
         value           uniform 6.7e-5;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
         type            nutkWallFunction;
         value           uniform 0;
@@ -45,7 +45,11 @@ boundaryField
         type            nutkWallFunction;
         value           uniform 0;
     }
-    frontAndBack
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
     {
         type            empty;
     }

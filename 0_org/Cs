@@ -30,20 +30,24 @@ boundaryField
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
-        type            vanRijnSedFlux;
+        type            zeroGradient;
         value           uniform 0;
     }
     cylinder
     {
         type            zeroGradient;
     }
-    frontAndBack
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
     {
         type            empty;
     }

@@ -30,11 +30,11 @@ boundaryField
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
         type            noSlip;
     }
@@ -42,7 +42,11 @@ boundaryField
     {
         type            noSlip;
     }
-    frontAndBack
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
     {
         type            empty;
     }

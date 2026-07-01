@@ -30,11 +30,11 @@ boundaryField
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
         type            omegaWallFunction;
         value           uniform 15;
@@ -44,7 +44,11 @@ boundaryField
         type            omegaWallFunction;
         value           uniform 15;
     }
-    frontAndBack
+    lateralfront
+    {
+        type            empty;
+    }
+    lateralback
     {
         type            empty;
     }

@@ -6,9 +6,9 @@
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 // PHASE 2 dynamicMeshDict (bedMotion on, active scour).
-// Copy to system/dynamicMeshDict before starting phase 2 run.
+// Copy to constant/dynamicMeshDict before starting phase 2 run.
 //
-// inverseDist references 'bottom' (the actual faMesh/bed patch name).
+// inverseDistance references 'bottom' (the actual faMesh/bed patch name).
 // This diffuses bed deformation upward: cells near bottom deform most,
 // upper fluid cells near free surface barely move.
 FoamFile
@@ -16,6 +16,7 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
+    location    "constant";
     object      dynamicMeshDict;
 }
 
@@ -27,7 +28,7 @@ motionSolver        displacementLaplacian;
 
 displacementLaplacianCoeffs
 {
-    diffusivity     inverseDist 1 (bottom);
+    diffusivity     inverseDistance 1 (bottom);
 }
 
 // ************************************************************************* //
