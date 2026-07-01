@@ -5,20 +5,19 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// ROOT CAUSE FIX (SIGFPE at Time=0.001):
-// ABorder 1 (Adams-Bashforth order 1) requires dVsed.oldTime() at step 2.
-// In a 2D extruded mesh the projectedFaMesh contains faces whose projected
-// area SfProj is computed in the horizontal (x-z) plane. For the single-cell
-// thick (empty) direction the FA face areas collapse toward zero, making
-// 1/SfProj -> Inf -> SIGFPE inside the exnerEqn AB1 stencil.
+// FIX: Added 'saturationType none' (was completely missing).
 //
-// Fix 1: ABorder 0 (Euler explicit) — no old-time stencil, no division issue.
-// Fix 2: bedMotion off during hydrodynamic spin-up (0 -> 2 s).
-//        Once flow is developed run Phase 2 with bedMotion on.
+// bedload.H reads saturationType from this dict. With no keyword present,
+// saturationType = "" which matches none of the three valid branches:
+//   "implicit1D" | "explicit" | "none"
+// → falls into the else { FatalError } branch
+// → OpenFOAM FatalError raises SIGABRT, caught by trapFpe, printed as SIGFPE.
 //
-// Official tutorial (SedFoam/sedExnerFoam) also uses bedMotion off + ABorder 1
-// with a pre-converged flow restart. We use ABorder 0 which is unconditionally
-// stable for the first run.
+// PHASE 1 (spin-up, bedMotion off): 'none' is correct — qb = qsat directly.
+// PHASE 2 (scour, bedMotion on): change to 'explicit' and add Lsat/Tsat.
+//   saturationType   explicit;
+//   Lsat             5e-3;   // 5 mm — Renaud et al. 2026, Sec 5.2.3
+//   Tsat             0.01;   // 0.01 s
 FoamFile
 {
     version     2.0;
@@ -38,10 +37,13 @@ sedimentBedPatches      (seabed);
 bedMotion               off;
 
 // Euler explicit (order 0): safe for cold start, no dVsed.oldTime() required.
-// Can switch to 1 (Adams-Bashforth) once a restart exists.
 ABorder                 0;
 
 fixedFaPatches          ();
+
+// SATURATION: 'none' for phase 1 (qb = qsat, no saturation equation).
+// Switch to 'explicit' with Lsat/Tsat for phase 2 (Renaud et al. 2026).
+saturationType          none;
 
 bedloadModel
 {
