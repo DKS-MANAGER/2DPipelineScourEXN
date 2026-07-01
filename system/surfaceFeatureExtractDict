@@ -8,20 +8,12 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-Cylinder.stl
+cylinder.stl
 {
-    // Extract feature edges from the cylinder STL.
-    // These are used by snappyHexMesh (features entry) to guide snapping
-    // onto the cylinder surface in the thin 2D domain (1 cell in z).
-    // Without this file, snappy cannot resolve the cylinder boundary
-    // and silently produces a mesh with no cylinder patch.
-
     extractionMethod    extractFromSurface;
 
     extractFromSurfaceCoeffs
     {
-        // Edges sharper than this angle are treated as feature edges.
-        // 150 deg = capture the sharp z-extrusion edges of the 2D cylinder.
         includedAngle   150;
     }
 
