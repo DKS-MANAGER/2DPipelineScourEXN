@@ -12,8 +12,8 @@
 // Cylinder centre: y = -0.024 + 0.025 = +0.001 m
 // STL centre: (0, 0.001, 0.0005)
 //
-// IMPORTANT: locationInMesh must be OUTSIDE the cylinder and inside the fluid.
-// Use (0.5, 0.1, 0.0005) - well away from cylinder near outlet/top.
+// NOTE: STL file is Cylinder.stl (capital C) - must match filename on disk
+// locationInMesh must be OUTSIDE the cylinder and inside the fluid domain.
 FoamFile
 {
     version     2.0;
@@ -28,7 +28,7 @@ addLayers       false;
 
 geometry
 {
-    cylinder.stl
+    Cylinder.stl
     {
         type triSurfaceMesh;
         name cylinder;
@@ -44,7 +44,13 @@ castellatedMeshControls
     maxLoadUnbalance     0.10;
     allowFreeStandingZoneFaces true;
 
-    features ();
+    features
+    (
+        {
+            file "Cylinder.eMesh";
+            level 3;
+        }
+    );
 
     refinementSurfaces
     {
