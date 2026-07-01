@@ -5,12 +5,22 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIXES APPLIED:
-// 1. top: symmetryPlane -> symmetry
-// 2. inlet omega: set to match k/epsilon ~ k/(nu*Cmu) from mixing length
-//    omega_inlet = sqrt(k) / (Cmu^0.25 * L), L ~ 0.1*H (H=0.3m)
-//    omega = sqrt(6e-4) / (0.09^0.25 * 0.03) = 0.02449 / 0.01644 ~ 18.4
-//    Use fixedValue 18.0 (consistent with inlet k=6e-4, nu=1e-6).
+// FIXES (Renaud et al. 2026, Geosci. Model Dev. - Section 5.2.2):
+// omega = 15 s-1 : paper's validated inlet value.
+//   nut_inlet = k/omega = 1e-3/15 = 6.7e-5 m2/s2 = 67 * nu
+//   This is physically consistent for Re ~ 1.2e5 (U=0.4, H=0.3, nu=1e-6).
+//
+// WHY omega=1 CAUSED SIGFPE:
+//   omegaWallFunction sets omega_wall = 6*nu/(beta1*y1^2) at step 1.
+//   With y1 = H/55 = 0.00545 m, nu=1e-6, beta1=0.075:
+//   omega_wall = 6e-6 / (0.075 * 2.97e-5) = 2692 s-1
+//   At step 2 kOmegaSST computes nut = k/omega_wall = 1e-3/2692 = 3.7e-7
+//   This is a 2692x drop from the step-1 value (nut=1e-3/1=1e-3).
+//   The huge change in nuEff causes the momentum matrix to diverge -> SIGFPE.
+//
+// FIX: Start with omega=15 so nut_initial = 6.7e-5 is already close to
+//   the wall-function equilibrium value. The step-2 update is smooth.
+// top: symmetryPlane (must match mesh boundary type).
 FoamFile
 {
     version     2.0;
@@ -23,14 +33,14 @@ FoamFile
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 18;
+internalField   uniform 15;
 
 boundaryField
 {
     inlet
     {
         type            fixedValue;
-        value           uniform 18;
+        value           uniform 15;
     }
     outlet
     {
@@ -38,12 +48,12 @@ boundaryField
     }
     top
     {
-        type            symmetry;
+        type            symmetryPlane;
     }
     seabed
     {
         type            omegaWallFunction;
-        value           uniform 18;
+        value           uniform 15;
     }
     frontAndBack
     {

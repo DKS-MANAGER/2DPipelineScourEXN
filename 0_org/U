@@ -5,22 +5,12 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIXES APPLIED:
-// 1. top: symmetryPlane -> symmetry
-//    symmetryPlane requires a geometrically perfect flat patch. In a 2D
-//    extruded mesh, OpenFOAM 2412's kOmegaSST calls nuEff on boundaries
-//    during fvc::grad(U) -> twoSymm -> dev. The tensor reflection via
-//    symmetryPlane on the top patch produces a non-zero Z-component that
-//    cancels to NaN at step 2. symmetry is the correct BC for pseudo-2D
-//    (empty) meshes with a free-slip top boundary.
-// 2. seabed: zeroGradient -> noSlip
-//    The wall functions (kqRWallFunction, omegaWallFunction,
-//    nutUSpaldingWallFunction) require a no-slip velocity BC on the wall
-//    patch. zeroGradient allows non-zero wall-normal velocity which
-//    destabilises kOmegaSST at step 2.
-// 3. inlet: zeroGradient -> fixedValue (0.4 0 0)
-//    With PISO pressure correction building up from step 2 onwards,
-//    zeroGradient at inlet allows backflow -> negative k -> SIGFPE.
+// FIXES (Renaud et al. 2026, Geosci. Model Dev.):
+// 1. top: reverted to symmetryPlane (mesh boundary type = symmetryPlane,
+//    field BC must match exactly or OpenFOAM fatal IO error).
+// 2. seabed: noSlip (wall functions require zero wall velocity).
+// 3. inlet: fixedValue (0.4 0 0) - prevents backflow-driven negative k
+//    when pressure correction builds from step 2 onwards.
 // 4. Removed duplicate frontAndBack block.
 FoamFile
 {
@@ -49,7 +39,7 @@ boundaryField
     }
     top
     {
-        type            symmetry;
+        type            symmetryPlane;
     }
     seabed
     {

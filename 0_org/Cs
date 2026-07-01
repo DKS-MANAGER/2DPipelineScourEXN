@@ -5,8 +5,7 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIXES APPLIED:
-// 1. top: symmetryPlane -> symmetry
+// top: symmetryPlane (must match mesh boundary type).
 FoamFile
 {
     version     2.0;
@@ -34,7 +33,7 @@ boundaryField
     }
     top
     {
-        type            symmetry;
+        type            symmetryPlane;
     }
     seabed
     {
