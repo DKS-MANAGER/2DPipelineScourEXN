@@ -30,7 +30,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 sedimentBed             on;
-sedimentBedPatches      (seabed);
+sedimentBedPatches      (bottom);
 
 // PHASE 1 (spin-up 0-2s): bedMotion OFF — mesh stays fixed while flow
 // develops. Change to 'on' for Phase 2 (2-45s) restart.
