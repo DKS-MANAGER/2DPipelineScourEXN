@@ -58,7 +58,7 @@ criticalShieldsModel
 // morphoAccFactor=10 accelerates bed evolution in Phase 2
 morphoAccFactor         10;
 
-filterExner             on;
+filterExner             off;
 alphaFiltExner          0.1;
 NfiltExner              3;
 
