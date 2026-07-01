@@ -1,0 +1,32 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      faMeshDefinition;
+}
+
+polyMeshPatches ( bottom );
+
+boundary
+{
+    inletFa
+    {
+        type        patch;
+        ownerPolyPatch    inlet;
+        neighbourPolyPatch    inlet;
+    }
+    outletFa
+    {
+        type        patch;
+        ownerPolyPatch    outlet;
+        neighbourPolyPatch    outlet;
+    }
+    lateralfrontFa
+    {
+        type        empty;
+        ownerPolyPatch    lateralfront;
+        neighbourPolyPatch    lateralback;
+    }
+}
