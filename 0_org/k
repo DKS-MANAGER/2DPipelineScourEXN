@@ -5,17 +5,6 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIXES (Renaud et al. 2026, Geosci. Model Dev. - Section 5.2.2):
-// k = 0.001 m2/s2 : paper's validated inlet value for kOmegaSST.
-// This corresponds to turbulence intensity I = sqrt(2k/3)/U
-//   = sqrt(2*0.001/3)/0.4 = 0.0408 ~ 4% (reasonable for pipe flow inlet).
-// Previous value k=6e-4 with omega=1 gave nut=6e-4 >> 67*nu at the wall
-// which caused a 2700x nut drop at step 2 when omegaWallFunction updated
-// omega_wall to ~2700 s-1, crashing kOmegaSST with SIGFPE.
-//
-// seabed: kqRWallFunction (required by kOmegaSST for wall patches).
-// top: symmetryPlane (must match mesh boundary type).
-// Removed duplicate frontAndBack block.
 FoamFile
 {
     version     2.0;
@@ -46,6 +35,11 @@ boundaryField
         type            symmetryPlane;
     }
     seabed
+    {
+        type            kqRWallFunction;
+        value           uniform 1e-3;
+    }
+    cylinder
     {
         type            kqRWallFunction;
         value           uniform 1e-3;

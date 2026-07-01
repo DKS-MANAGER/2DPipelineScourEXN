@@ -5,13 +5,6 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIXES (Renaud et al. 2026, Geosci. Model Dev.):
-// 1. top: reverted to symmetryPlane (mesh boundary type = symmetryPlane,
-//    field BC must match exactly or OpenFOAM fatal IO error).
-// 2. seabed: noSlip (wall functions require zero wall velocity).
-// 3. inlet: fixedValue (0.4 0 0) - prevents backflow-driven negative k
-//    when pressure correction builds from step 2 onwards.
-// 4. Removed duplicate frontAndBack block.
 FoamFile
 {
     version     2.0;
@@ -42,6 +35,10 @@ boundaryField
         type            symmetryPlane;
     }
     seabed
+    {
+        type            noSlip;
+    }
+    cylinder
     {
         type            noSlip;
     }

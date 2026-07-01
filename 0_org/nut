@@ -5,8 +5,6 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// nut internalField set consistent with k/omega = 1e-3/15 = 6.7e-5
-// top: symmetryPlane (must match mesh boundary type).
 FoamFile
 {
     version     2.0;
@@ -39,7 +37,12 @@ boundaryField
     }
     seabed
     {
-        type            nutUSpaldingWallFunction;
+        type            nutkWallFunction;
+        value           uniform 0;
+    }
+    cylinder
+    {
+        type            nutkWallFunction;
         value           uniform 0;
     }
     frontAndBack

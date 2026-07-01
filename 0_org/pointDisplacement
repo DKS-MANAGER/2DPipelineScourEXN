@@ -5,11 +5,11 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIX: seabed changed from fixedNormalSlip (n=(0 1 0)) to fixedValue zero.
-//      fixedNormalSlip passes the normal (y) component through, allowing
-//      the Exner/FA->FV coupling to inject non-zero displacement on step 1,
-//      which then corrupts face deltaCoeffs -> SIGFPE on step 2.
-// FIX: removed duplicate 'frontAndBack' block.
+// Phase 1: staticFvMesh - pointDisplacement not used by solver.
+// Phase 2: dynamicMotionSolverFvMesh reads this field.
+//   seabed: driven by exnerEqn (fixedNormalSlip with n=(0 1 0))
+//   cylinder: fixedValue zero (rigid pipeline never moves)
+//   inlet/outlet/top: fixedValue zero (domain boundaries fixed)
 FoamFile
 {
     version     2.0;
@@ -42,6 +42,12 @@ boundaryField
         value           uniform (0 0 0);
     }
     seabed
+    {
+        type            fixedNormalSlip;
+        n               (0 1 0);
+        value           uniform (0 0 0);
+    }
+    cylinder
     {
         type            fixedValue;
         value           uniform (0 0 0);
