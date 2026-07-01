@@ -14,43 +14,41 @@ FoamFile
     object      omega;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// omega = k^0.5 / (Cmu^0.25 * l), l=0.01m (1% of pipe D=0.05m)
-// omega ~ 60 * nu / (beta1 * y^2) near wall (omegaWallFunction handles this)
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 10;
+internalField   uniform 15;
 
 boundaryField
 {
     inlet
     {
-        type            zeroGradient;
-        value           uniform 10;
+        type            fixedValue;
+        value           uniform 15;
     }
     outlet
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
-        type            zeroGradient;
-        value           uniform 10;
+        type            omegaWallFunction;
+        value           uniform 15;
     }
     cylinder
     {
         type            omegaWallFunction;
-        value           uniform 10;
+        value           uniform 15;
     }
-    frontAndBack
+    lateralfront
     {
         type            empty;
     }
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

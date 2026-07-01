@@ -9,45 +9,27 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      Cs;
+    class       areaScalarField;
+    location    "0/finite-area";
+    object      zb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 0 0 0 0];
+dimensions      [0 1 0 0 0 0 0];
 
 internalField   uniform 0;
 
 boundaryField
 {
-    inlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
-    outlet
+    inletFa
     {
         type            zeroGradient;
     }
-    surface
-    {
-        type            symmetryPlane;
-    }
-    bottom
-    {
-        type            zeroGradient;
-        value           uniform 0;
-    }
-    cylinder
+    outletFa
     {
         type            zeroGradient;
     }
-    lateralfront
-    {
-        type            empty;
-    }
-    lateralback
+    frontAndBackFa
     {
         type            empty;
     }

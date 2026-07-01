@@ -14,38 +14,41 @@ FoamFile
     object      k;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// k = 1.5*(I*U)^2, I=0.05 (5% turbulence intensity), U=0.4 m/s
-// k = 1.5*(0.05*0.4)^2 = 6e-4 m2/s2
 
 dimensions      [0 2 -2 0 0 0 0];
 
-internalField   uniform 6e-4;
+internalField   uniform 1e-3;
 
 boundaryField
 {
     inlet
     {
-        type            zeroGradient;
-        value           uniform 6e-4;
+        type            fixedValue;
+        value           uniform 1e-3;
     }
     outlet
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
-        type            zeroGradient;
-        value           uniform 6e-4;
+        type            kqRWallFunction;
+        value           uniform 1e-3;
     }
-    frontAndBack
+    cylinder
+    {
+        type            kqRWallFunction;
+        value           uniform 1e-3;
+    }
+    lateralfront
     {
         type            empty;
     }
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

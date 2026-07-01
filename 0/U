@@ -23,26 +23,30 @@ boundaryField
 {
     inlet
     {
-        type            zeroGradient;
+        type            fixedValue;
         value           uniform (0.4 0 0);
     }
     outlet
     {
         type            zeroGradient;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
-        type            zeroGradient;
+        type            noSlip;
     }
-    frontAndBack
+    cylinder
+    {
+        type            noSlip;
+    }
+    lateralfront
     {
         type            empty;
     }
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

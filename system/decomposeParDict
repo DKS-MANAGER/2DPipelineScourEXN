@@ -12,9 +12,9 @@ numberOfSubdomains  8;
 
 method              scotch;
 
-// NOTE: singleProcessorFaceSets constraint for 'seabed' is intentionally
+// NOTE: singleProcessorFaceSets constraint for 'bottom' is intentionally
 // omitted here. It must only be added AFTER snappyHexMesh has run and the
-// seabed faceSet exists in constant/polyMesh/sets/. Re-add it before
+// bottom faceSet exists in constant/polyMesh/sets/. Re-add it before
 // running sedExnerFoam in parallel.
 
 // ************************************************************************* //

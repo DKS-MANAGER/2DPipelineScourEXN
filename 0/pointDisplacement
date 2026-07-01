@@ -5,6 +5,11 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// Phase 1: staticFvMesh - pointDisplacement not used by solver.
+// Phase 2: dynamicMotionSolverFvMesh reads this field.
+//   bottom: driven by exnerEqn (fixedNormalSlip with n=(0 1 0))
+//   cylinder: fixedValue zero (rigid pipeline never moves)
+//   inlet/outlet/surface: fixedValue zero (domain boundaries fixed)
 FoamFile
 {
     version     2.0;
@@ -31,22 +36,27 @@ boundaryField
         type            fixedValue;
         value           uniform (0 0 0);
     }
-    top
+    surface
     {
         type            fixedValue;
         value           uniform (0 0 0);
     }
-    seabed
+    bottom
     {
         type            fixedNormalSlip;
         n               (0 1 0);
         value           uniform (0 0 0);
     }
-    frontAndBack
+    cylinder
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+    lateralfront
     {
         type            empty;
     }
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

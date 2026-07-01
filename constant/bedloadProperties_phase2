@@ -23,7 +23,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 sedimentBed             on;
-sedimentBedPatches      (seabed);
+sedimentBedPatches      (bottom);
 
 // PHASE 2: bed motion ON — Exner drives mesh deformation
 bedMotion               on;

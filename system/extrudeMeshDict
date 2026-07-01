@@ -10,13 +10,13 @@ FoamFile
 //
 // extrudeMeshDict
 //
-// PURPOSE: enforce the 2D empty-patch condition on frontAndBack.
+// PURPOSE: enforce the 2D empty-patch condition on lateralfront.
 //
 // The blockMesh already creates a single-cell slab (z: 0 to 0.001).
-// snappyHexMesh preserves this z-thickness but writes frontAndBack
+// snappyHexMesh preserves this z-thickness but writes lateralfront
 // as type 'wall' (it doesn't know it's a 2D symmetry plane).
 // extrudeMesh with constructFrom mesh re-processes the existing mesh
-// and correctly sets frontAndBack as the 2D empty patch pair.
+// and correctly sets lateralfront as the 2D empty patch pair.
 //
 // PATCH NAME: must match constant/polyMesh/boundary exactly.
 // Verify with: grep -B1 'empty' constant/polyMesh/boundary
@@ -27,9 +27,9 @@ sourceCase      ".";
 
 // The front face patch (z=0) -- extrudeMesh will pair it with
 // the back face (z=0.001) and set both to type empty.
-sourcePatches   (frontAndBack);
+sourcePatches   (lateralfront);
 
-exposedPatchName frontAndBack;
+exposedPatchName lateralfront;
 
 flipNormals     false;
 

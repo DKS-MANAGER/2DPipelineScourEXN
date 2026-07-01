@@ -8,7 +8,7 @@
 // PHASE 1 (spin-up, bedMotion off): staticFvMesh — mesh never moves.
 // Root cause of SIGFPE: dynamicMotionSolverFvMesh was active with
 // inverseDist referencing patch 'bottom' which does not exist in the mesh
-// (actual patch is 'seabed'). Missing patch -> diffusivity = 0 everywhere
+// (actual patch is 'bottom'). Missing patch -> diffusivity = 0 everywhere
 // -> singular Laplacian system -> NaN point displacements -> zero-volume
 // cells -> nonOrthDeltaCoeffs = 1/0 -> SIGFPE in kOmegaSST::correct().
 //
@@ -16,7 +16,7 @@
 //   dynamicFvMesh       dynamicMotionSolverFvMesh;
 //   motionSolverLibs    ("libfvMotionSolvers.so");
 //   motionSolver        displacementLaplacian;
-//   displacementLaplacianCoeffs { diffusivity inverseDist 1 (seabed); }
+//   displacementLaplacianCoeffs { diffusivity inverseDist 1 (bottom); }
 FoamFile
 {
     version     2.0;

@@ -8,8 +8,8 @@
 // PHASE 2 dynamicMeshDict (bedMotion on, active scour).
 // Copy to system/dynamicMeshDict before starting phase 2 run.
 //
-// inverseDist references 'seabed' (the actual faMesh/bed patch name).
-// This diffuses bed deformation upward: cells near seabed deform most,
+// inverseDist references 'bottom' (the actual faMesh/bed patch name).
+// This diffuses bed deformation upward: cells near bottom deform most,
 // upper fluid cells near free surface barely move.
 FoamFile
 {
@@ -27,7 +27,7 @@ motionSolver        displacementLaplacian;
 
 displacementLaplacianCoeffs
 {
-    diffusivity     inverseDist 1 (seabed);
+    diffusivity     inverseDist 1 (bottom);
 }
 
 // ************************************************************************* //

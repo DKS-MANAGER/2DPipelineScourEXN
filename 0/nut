@@ -17,27 +17,27 @@ FoamFile
 
 dimensions      [0 2 -1 0 0 0 0];
 
-internalField   uniform 0;
+internalField   uniform 6.7e-5;
 
 boundaryField
 {
     inlet
     {
-        type            zeroGradient;
-        value           uniform 0;
+        type            calculated;
+        value           uniform 6.7e-5;
     }
     outlet
     {
-        type            zeroGradient;
-        value           uniform 0;
+        type            calculated;
+        value           uniform 6.7e-5;
     }
-    top
+    surface
     {
         type            symmetryPlane;
     }
-    seabed
+    bottom
     {
-        type            zeroGradient;
+        type            nutkWallFunction;
         value           uniform 0;
     }
     cylinder
@@ -45,11 +45,11 @@ boundaryField
         type            nutkWallFunction;
         value           uniform 0;
     }
-    frontAndBack
+    lateralfront
     {
         type            empty;
     }
-    frontAndBack
+    lateralback
     {
         type            empty;
     }

@@ -12,7 +12,7 @@
 // PIMPLE iteration, including step 2.
 //
 // At step 2, the Courant number jumped from 0.066 -> 0.282 after step 1
-// (inlet corner velocity gradient: fixedValue (0.4 0 0) meets noSlip seabed).
+// (inlet corner velocity gradient: fixedValue (0.4 0 0) meets noSlip bottom).
 // correctPhi solves: div(phi_corr) = div(U) over the face flux field.
 // With the large Co jump and no mesh motion to justify the correction,
 // the pcorr GAMG solve produces face fluxes with 1/deltaCoeffs -> large
