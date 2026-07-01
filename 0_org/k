@@ -5,6 +5,15 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+// FIXES APPLIED:
+// 1. top: symmetryPlane -> symmetry (see U for full explanation)
+// 2. seabed: zeroGradient -> kqRWallFunction
+//    kOmegaSST requires kqRWallFunction on wall patches. zeroGradient
+//    produces unbounded k at the wall which triggers SIGFPE in the
+//    omega dissipation term (k/omega) at step 2.
+// 3. inlet: kept fixedValue to match turbulence intensity
+// 4. Removed duplicate frontAndBack block.
+// k = 1.5*(I*U)^2, I=0.05 (5%), U=0.4 m/s => k = 6e-4 m2/s2
 FoamFile
 {
     version     2.0;
@@ -14,8 +23,6 @@ FoamFile
     object      k;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// k = 1.5*(I*U)^2, I=0.05 (5% turbulence intensity), U=0.4 m/s
-// k = 1.5*(0.05*0.4)^2 = 6e-4 m2/s2
 
 dimensions      [0 2 -2 0 0 0 0];
 
@@ -25,7 +32,7 @@ boundaryField
 {
     inlet
     {
-        type            zeroGradient;
+        type            fixedValue;
         value           uniform 6e-4;
     }
     outlet
@@ -34,16 +41,12 @@ boundaryField
     }
     top
     {
-        type            symmetryPlane;
+        type            symmetry;
     }
     seabed
     {
-        type            zeroGradient;
+        type            kqRWallFunction;
         value           uniform 6e-4;
-    }
-    frontAndBack
-    {
-        type            empty;
     }
     frontAndBack
     {

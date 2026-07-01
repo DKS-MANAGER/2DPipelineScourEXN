@@ -5,8 +5,12 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIX: removed non-existent 'cylinder' patch block.
-// FIX: removed duplicate 'frontAndBack' block.
+// FIXES APPLIED:
+// 1. top: symmetryPlane -> symmetry
+// 2. inlet omega: set to match k/epsilon ~ k/(nu*Cmu) from mixing length
+//    omega_inlet = sqrt(k) / (Cmu^0.25 * L), L ~ 0.1*H (H=0.3m)
+//    omega = sqrt(6e-4) / (0.09^0.25 * 0.03) = 0.02449 / 0.01644 ~ 18.4
+//    Use fixedValue 18.0 (consistent with inlet k=6e-4, nu=1e-6).
 FoamFile
 {
     version     2.0;
@@ -19,14 +23,14 @@ FoamFile
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 1;
+internalField   uniform 18;
 
 boundaryField
 {
     inlet
     {
         type            fixedValue;
-        value           uniform 1;
+        value           uniform 18;
     }
     outlet
     {
@@ -34,12 +38,12 @@ boundaryField
     }
     top
     {
-        type            symmetryPlane;
+        type            symmetry;
     }
     seabed
     {
         type            omegaWallFunction;
-        value           uniform 1;
+        value           uniform 18;
     }
     frontAndBack
     {

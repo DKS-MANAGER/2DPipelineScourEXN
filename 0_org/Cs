@@ -5,12 +5,8 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIX: removed non-existent 'cylinder' patch block.
-// FIX: removed duplicate 'frontAndBack' block.
-// FIX: inlet changed to fixedValue 1e-4 (near-bed equilibrium reference
-//      concentration). With zeroGradient everywhere Cs=0 is trivially
-//      satisfied and no transport occurs - the equation produces Initial
-//      residual=0, No Iterations=0 every step.
+// FIXES APPLIED:
+// 1. top: symmetryPlane -> symmetry
 FoamFile
 {
     version     2.0;
@@ -38,7 +34,7 @@ boundaryField
     }
     top
     {
-        type            symmetryPlane;
+        type            symmetry;
     }
     seabed
     {

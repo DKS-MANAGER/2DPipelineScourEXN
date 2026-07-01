@@ -5,7 +5,8 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FIX: removed non-existent 'cylinder' patch block.
+// FIXES APPLIED:
+// 1. top: symmetryPlane -> symmetry
 FoamFile
 {
     version     2.0;
@@ -34,7 +35,7 @@ boundaryField
     }
     top
     {
-        type            symmetryPlane;
+        type            symmetry;
     }
     seabed
     {
