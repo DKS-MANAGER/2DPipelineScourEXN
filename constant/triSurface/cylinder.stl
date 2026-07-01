@@ -1,0 +1,114 @@
+solid cylinder
+  facet normal 9.990482e-01 4.361939e-02 0.000000e+00
+    outer loop
+      vertex 2.500000e-02 1.000000e-03 0.000000e+00
+      vertex 2.490487e-02 3.178894e-03 0.000000e+00
+      vertex 2.490487e-02 3.178894e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 9.990482e-01 4.361939e-02 0.000000e+00
+    outer loop
+      vertex 2.500000e-02 1.000000e-03 0.000000e+00
+      vertex 2.490487e-02 3.178894e-03 1.000000e-03
+      vertex 2.500000e-02 1.000000e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 0.000000e+00
+      vertex 2.490487e-02 3.178894e-03 0.000000e+00
+      vertex 2.500000e-02 1.000000e-03 0.000000e+00
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 1.000000e-03
+      vertex 2.500000e-02 1.000000e-03 1.000000e-03
+      vertex 2.490487e-02 3.178894e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 9.822873e-01 1.873813e-01 0.000000e+00
+    outer loop
+      vertex 2.490487e-02 3.178894e-03 0.000000e+00
+      vertex 2.461940e-02 6.331730e-03 0.000000e+00
+      vertex 2.461940e-02 6.331730e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 9.822873e-01 1.873813e-01 0.000000e+00
+    outer loop
+      vertex 2.490487e-02 3.178894e-03 0.000000e+00
+      vertex 2.461940e-02 6.331730e-03 1.000000e-03
+      vertex 2.490487e-02 3.178894e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 0.000000e+00
+      vertex 2.461940e-02 6.331730e-03 0.000000e+00
+      vertex 2.490487e-02 3.178894e-03 0.000000e+00
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 1.000000e-03
+      vertex 2.490487e-02 3.178894e-03 1.000000e-03
+      vertex 2.461940e-02 6.331730e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 9.396926e-01 3.420201e-01 0.000000e+00
+    outer loop
+      vertex 2.461940e-02 6.331730e-03 0.000000e+00
+      vertex 2.414214e-02 9.393727e-03 0.000000e+00
+      vertex 2.414214e-02 9.393727e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 9.396926e-01 3.420201e-01 0.000000e+00
+    outer loop
+      vertex 2.461940e-02 6.331730e-03 0.000000e+00
+      vertex 2.414214e-02 9.393727e-03 1.000000e-03
+      vertex 2.461940e-02 6.331730e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 0.000000e+00
+      vertex 2.414214e-02 9.393727e-03 0.000000e+00
+      vertex 2.461940e-02 6.331730e-03 0.000000e+00
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 1.000000e-03
+      vertex 2.461940e-02 6.331730e-03 1.000000e-03
+      vertex 2.414214e-02 9.393727e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 8.819213e-01 4.713967e-01 0.000000e+00
+    outer loop
+      vertex 2.414214e-02 9.393727e-03 0.000000e+00
+      vertex 2.348928e-02 1.240341e-02 0.000000e+00
+      vertex 2.348928e-02 1.240341e-02 1.000000e-03
+    endloop
+  endfacet
+  facet normal 8.819213e-01 4.713967e-01 0.000000e+00
+    outer loop
+      vertex 2.414214e-02 9.393727e-03 0.000000e+00
+      vertex 2.348928e-02 1.240341e-02 1.000000e-03
+      vertex 2.414214e-02 9.393727e-03 1.000000e-03
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 0.000000e+00
+      vertex 2.348928e-02 1.240341e-02 0.000000e+00
+      vertex 2.414214e-02 9.393727e-03 0.000000e+00
+    endloop
+  endfacet
+  facet normal 0.000000e+00 0.000000e+00 1.000000e+00
+    outer loop
+      vertex 0.000000e+00 1.000000e-03 1.000000e-03
+      vertex 2.414214e-02 9.393727e-03 1.000000e-03
+      vertex 2.348928e-02 1.240341e-02 1.000000e-03
+    endloop
+  endfacet
+endsolid cylinder

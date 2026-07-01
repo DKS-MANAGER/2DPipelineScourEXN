@@ -5,8 +5,15 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// Cylinder: D=0.05m, centre=(0,0.0255,0.0005)
-// Gap e = D*0.02 = 0.001m -> bed at y=0, cylinder bottom at y=0.001m
+// Cylinder: D=0.05m, R=0.025m
+// Seabed patch: y = -0.025 m
+// Gap: e = 0.02*D = 0.001 m
+// Cylinder bottom: y = -0.025 + 0.001 = -0.024 m
+// Cylinder centre: y = -0.024 + 0.025 = +0.001 m
+// STL centre: (0, 0.001, 0.0005)
+//
+// IMPORTANT: locationInMesh must be OUTSIDE the cylinder and inside the fluid.
+// Use (0.5, 0.1, 0.0005) - well away from cylinder near outlet/top.
 FoamFile
 {
     version     2.0;
